@@ -13,16 +13,48 @@ afterAll(async () => {
   await instance.stop();
 });
 
-describe("validate-patient", () => {
-  it("validates a minimal Patient with no issues", async () => {
+describe("simple validation", () => {
+  it("validates a minimal Patient with no errors", async () => {
     const res = await instance.rest.operation("Patient", "validate", {
       resourceType: "Patient",
       id: "example",
     });
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({
-      resourceType: "OperationOutcome",
-      issue: [],
+    expect(res.body).toMatchObject({ resourceType: "OperationOutcome" });
+    const issues = (res.body as { issue?: { severity: string }[] }).issue ?? [];
+    expect(issues.some((i) => i.severity === "error" || i.severity === "fatal")).toBe(false);
+  });
+
+  it("reports an error when Patient.name has the wrong type", async () => {
+    const res = await instance.rest.operation("Patient", "validate", {
+      resourceType: "Patient",
+      name: "John",
     });
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ resourceType: "OperationOutcome" });
+    const issues = (res.body as { issue?: { severity: string }[] }).issue ?? [];
+    expect(issues.some((i) => i.severity === "error" || i.severity === "fatal")).toBe(true);
+  });
+
+  it("accepts a Patient with a valid gender code", async () => {
+    const res = await instance.rest.operation("Patient", "validate", {
+      resourceType: "Patient",
+      gender: "male",
+    });
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ resourceType: "OperationOutcome" });
+    const issues = (res.body as { issue?: { severity: string }[] }).issue ?? [];
+    expect(issues.some((i) => i.severity === "error" || i.severity === "fatal")).toBe(false);
+  });
+
+  it("reports an error for a Patient with an invalid gender code", async () => {
+    const res = await instance.rest.operation("Patient", "validate", {
+      resourceType: "Patient",
+      gender: "mmale",
+    });
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ resourceType: "OperationOutcome" });
+    const issues = (res.body as { issue?: { severity: string }[] }).issue ?? [];
+    expect(issues.some((i) => i.severity === "error" || i.severity === "fatal")).toBe(true);
   });
 });

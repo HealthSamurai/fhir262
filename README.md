@@ -20,9 +20,13 @@ Medplum, Firely, and others.
 
 ```
 make test-stub                                                # run against the bundled stub impl
-bun bin/run.ts -impl impl/stub/index.ts                       # equivalent
-bun bin/run.ts -impl impl/stub/index.ts -out report.json      # also write a JSON report
+make test-aidbox                                              # run against Aidbox (needs Docker + AIDBOX_LICENSE)
+bun bin/run.ts -impl impl/stub/index.ts -out report.json      # write a JSON report
 ```
+
+The Aidbox runner expects `AIDBOX_LICENSE` in a local `.env` file (see
+`.env.example`); it spins up a fresh postgres + aidboxone pair per test
+file via [testcontainers](https://node.testcontainers.org/).
 
 For codebase layout and how to write tests / add an impl, see
 [CLAUDE.md](./CLAUDE.md). Design plans live under [plans/](./plans/).
