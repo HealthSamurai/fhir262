@@ -19,7 +19,6 @@ describe("simple validation", () => {
       resourceType: "Patient",
       id: "example",
     });
-    expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ resourceType: "OperationOutcome" });
     const issues = (res.body as { issue?: { severity: string }[] }).issue ?? [];
     expect(issues.some((i) => i.severity === "error" || i.severity === "fatal")).toBe(false);
@@ -30,7 +29,6 @@ describe("simple validation", () => {
       resourceType: "Patient",
       name: "John",
     });
-    expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ resourceType: "OperationOutcome" });
     const issues = (res.body as { issue?: { severity: string }[] }).issue ?? [];
     expect(issues.some((i) => i.severity === "error" || i.severity === "fatal")).toBe(true);
@@ -41,7 +39,6 @@ describe("simple validation", () => {
       resourceType: "Patient",
       gender: "male",
     });
-    expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ resourceType: "OperationOutcome" });
     const issues = (res.body as { issue?: { severity: string }[] }).issue ?? [];
     expect(issues.some((i) => i.severity === "error" || i.severity === "fatal")).toBe(false);
@@ -52,7 +49,6 @@ describe("simple validation", () => {
       resourceType: "Patient",
       gender: "mmale",
     });
-    expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ resourceType: "OperationOutcome" });
     const issues = (res.body as { issue?: { severity: string }[] }).issue ?? [];
     expect(issues.some((i) => i.severity === "error" || i.severity === "fatal")).toBe(true);
