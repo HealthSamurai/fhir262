@@ -1,0 +1,22 @@
+# dependencies
+node_modules/
+
+# test outputs
+.results/
+coverage/
+
+# build artifacts
+*.tsbuildinfo
+
+# logs
+*.log
+
+# env
+.env
+.env.local
+
+# OS
+.DS_Store
+
+# Claude (local, machine-specific)
+.claude/settings.local.json
