@@ -71,7 +71,7 @@ afterAll(async () => { await instance.stop(); });
 
 describe("validate-patient", () => {
   it("validates a minimal Patient with no errors", async () => {
-    const res = await instance.rest.operation("Patient", "validate", {
+    const res = await instance.rest.operation("Patient", "$validate", {
       resourceType: "Patient", id: "example",
     });
     expect(res.status).toBe(200);

@@ -77,7 +77,7 @@ const server: Server = {
 
     const rest: Rest = {
       async operation(resourceType, operation, params) {
-        const path = `/fhir/${resourceType}/$${operation}`;
+        const path = `/fhir/${resourceType}/${operation}`;
         const tOp = Date.now();
         const res = await fetch(`${baseUrl}${path}`, {
           method: "POST",

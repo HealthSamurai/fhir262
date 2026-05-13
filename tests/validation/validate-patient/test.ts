@@ -20,7 +20,7 @@ afterAll(async () => {
 
 describe("simple validation", () => {
   it("validates a minimal Patient with no errors", async () => {
-    const res = await instance.rest.operation("Patient", "validate", {
+    const res = await instance.rest.operation("Patient", "$validate", {
       resourceType: "Patient",
       id: "example",
     });
@@ -28,7 +28,7 @@ describe("simple validation", () => {
   });
 
   it("reports an error when Patient.name has the wrong type", async () => {
-    const res = await instance.rest.operation("Patient", "validate", {
+    const res = await instance.rest.operation("Patient", "$validate", {
       resourceType: "Patient",
       name: "John",
     });
@@ -37,7 +37,7 @@ describe("simple validation", () => {
   });
 
   it("accepts a Patient with a valid gender code", async () => {
-    const res = await instance.rest.operation("Patient", "validate", {
+    const res = await instance.rest.operation("Patient", "$validate", {
       resourceType: "Patient",
       gender: "male",
     });
@@ -45,7 +45,7 @@ describe("simple validation", () => {
   });
 
   it("reports an error for a Patient with an invalid gender code", async () => {
-    const res = await instance.rest.operation("Patient", "validate", {
+    const res = await instance.rest.operation("Patient", "$validate", {
       resourceType: "Patient",
       gender: "mmale",
     });
