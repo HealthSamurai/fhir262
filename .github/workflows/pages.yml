@@ -1,0 +1,64 @@
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # push to gh-pages
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      AIDBOX_LICENSE: ${{ secrets.AIDBOX_LICENSE }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Restore previous run history from gh-pages
+        run: |
+          mkdir -p dist/runs
+          if git fetch origin gh-pages 2>/dev/null; then
+            git worktree add --detach gh-pages-tmp origin/gh-pages || true
+            if [ -d gh-pages-tmp/runs ]; then
+              # Bring forward every prior run file. The index is regenerated.
+              find gh-pages-tmp/runs -maxdepth 1 -name '*.json' ! -name 'index.json' \
+                -exec cp {} dist/runs/ \;
+            fi
+          else
+            echo "No gh-pages branch yet — starting fresh."
+          fi
+
+      - name: Run conformance suite
+        # Don't fail the build when an individual impl fails — the merge is
+        # interesting precisely because impls disagree. Tests record their
+        # failures in .results/<impl>.json regardless.
+        run: make -k test-all || true
+
+      - name: Build dist
+        run: bun bin/build.ts -results .results -dist dist
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          force_orphan: false
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: "deploy: ${{ github.sha }}"

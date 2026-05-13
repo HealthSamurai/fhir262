@@ -5,6 +5,10 @@ node_modules/
 .results/
 coverage/
 
+# UI build output (assembled in CI from .results/ + ui/)
+dist/
+gh-pages-tmp/
+
 # build artifacts
 *.tsbuildinfo
 

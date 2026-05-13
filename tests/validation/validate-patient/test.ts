@@ -1,11 +1,6 @@
-import { describe, it, beforeAll, afterAll } from "@jest/globals";
+import { describe, it, expect, beforeAll, afterAll } from "@jest/globals";
 import type { ServerInstance } from "../../../interfaces/server";
 import { loadImpl } from "../../../framework/impl-loader";
-import {
-  expectValid,
-  expectInvalid,
-  expectIssueExpression,
-} from "../../../framework/validation-asserters";
 
 const server = loadImpl().server;
 let instance: ServerInstance;
@@ -24,7 +19,7 @@ describe("simple validation", () => {
       resourceType: "Patient",
       id: "example",
     });
-    expectValid(res);
+    expect(res).toBeValid();
   });
 
   it("reports an error when Patient.name has the wrong type", async () => {
@@ -32,8 +27,8 @@ describe("simple validation", () => {
       resourceType: "Patient",
       name: "John",
     });
-    expectInvalid(res);
-    expectIssueExpression(res, "Patient.name");
+    expect(res).toBeInvalid();
+    expect(res).toHaveIssueAt("Patient.name");
   });
 
   it("accepts a Patient with a valid gender code", async () => {
@@ -41,7 +36,7 @@ describe("simple validation", () => {
       resourceType: "Patient",
       gender: "male",
     });
-    expectValid(res);
+    expect(res).toBeValid();
   });
 
   it("reports an error for a Patient with an invalid gender code", async () => {
@@ -49,7 +44,7 @@ describe("simple validation", () => {
       resourceType: "Patient",
       gender: "mmale",
     });
-    expectInvalid(res);
-    expectIssueExpression(res, "Patient.gender");
+    expect(res).toBeInvalid();
+    expect(res).toHaveIssueAt("Patient.gender");
   });
 });

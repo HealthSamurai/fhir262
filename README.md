@@ -24,11 +24,32 @@ Four components:
 ## Quick start
 
 ```
-make test-stub                                                # bundled stub impl
 make test-aidbox                                              # Aidbox (needs Docker + AIDBOX_LICENSE)
 make test-medplum                                             # Medplum (needs Docker)
 bun bin/run.ts -impl impl/stub/index.ts -out report.json      # write a JSON report
 ```
 
 Aidbox needs `AIDBOX_LICENSE` in `.env` (see `.env.example`).
+
+## Conformance matrix UI
+
+The React UI under `ui/` renders a comparison matrix from a merged run
+report. CI assembles `dist/` (UI + accumulated run history) and publishes
+it to GitHub Pages.
+
+```
+make test-all     # produces .results/<impl>.json per impl
+make ui-dist      # merges .results/ into dist/runs/run-<ts>.json + copies ui/
+make ui-serve     # builds + serves dist/ on http://localhost:8000
+```
+
+`dist/runs/` accumulates one `run-<ts>.json` per build plus an
+`index.json` listing all runs. The UI fetches the index, picks the
+newest run, and lets you switch via the history popover (uses
+`?run=<id>`). Re-running `make ui-dist` after a fresh test run adds a
+new entry alongside the old ones.
+
+CI (`.github/workflows/pages.yml`) restores `dist/runs/` from the
+existing `gh-pages` branch before running `bin/build.ts`, so history
+persists across deploys.
 
