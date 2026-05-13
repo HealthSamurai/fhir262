@@ -3,11 +3,7 @@
 RESULTS := .results
 
 test-all:
-	$(MAKE) -j3 -k test-stub test-aidbox test-medplum
-
-test-stub:
-	@mkdir -p $(RESULTS)
-	bun bin/run.ts -impl impl/stub/index.ts -out $(RESULTS)/stub.json
+	$(MAKE) -j2 -k test-aidbox test-medplum
 
 test-aidbox:
 	@mkdir -p $(RESULTS)

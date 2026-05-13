@@ -1,6 +1,11 @@
-import { describe, it, expect, beforeAll, afterAll } from "@jest/globals";
+import { describe, it, beforeAll, afterAll } from "@jest/globals";
 import type { ServerInstance } from "../../../interfaces/server";
 import { loadImpl } from "../../../framework/impl-loader";
+import {
+  expectValid,
+  expectInvalid,
+  expectIssueExpression,
+} from "../../../framework/validation-asserters";
 
 const server = loadImpl().server;
 let instance: ServerInstance;
@@ -19,9 +24,7 @@ describe("simple validation", () => {
       resourceType: "Patient",
       id: "example",
     });
-    expect(res.body).toMatchObject({ resourceType: "OperationOutcome" });
-    const issues = (res.body as { issue?: { severity: string }[] }).issue ?? [];
-    expect(issues.some((i) => i.severity === "error" || i.severity === "fatal")).toBe(false);
+    expectValid(res);
   });
 
   it("reports an error when Patient.name has the wrong type", async () => {
@@ -29,9 +32,8 @@ describe("simple validation", () => {
       resourceType: "Patient",
       name: "John",
     });
-    expect(res.body).toMatchObject({ resourceType: "OperationOutcome" });
-    const issues = (res.body as { issue?: { severity: string }[] }).issue ?? [];
-    expect(issues.some((i) => i.severity === "error" || i.severity === "fatal")).toBe(true);
+    expectInvalid(res);
+    expectIssueExpression(res, "Patient.name");
   });
 
   it("accepts a Patient with a valid gender code", async () => {
@@ -39,9 +41,7 @@ describe("simple validation", () => {
       resourceType: "Patient",
       gender: "male",
     });
-    expect(res.body).toMatchObject({ resourceType: "OperationOutcome" });
-    const issues = (res.body as { issue?: { severity: string }[] }).issue ?? [];
-    expect(issues.some((i) => i.severity === "error" || i.severity === "fatal")).toBe(false);
+    expectValid(res);
   });
 
   it("reports an error for a Patient with an invalid gender code", async () => {
@@ -49,8 +49,7 @@ describe("simple validation", () => {
       resourceType: "Patient",
       gender: "mmale",
     });
-    expect(res.body).toMatchObject({ resourceType: "OperationOutcome" });
-    const issues = (res.body as { issue?: { severity: string }[] }).issue ?? [];
-    expect(issues.some((i) => i.severity === "error" || i.severity === "fatal")).toBe(true);
+    expectInvalid(res);
+    expectIssueExpression(res, "Patient.gender");
   });
 });
