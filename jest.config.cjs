@@ -6,4 +6,5 @@ module.exports = {
   rootDir: ".",
   testTimeout: 180000,
   slowTestThreshold: 120,
+  testLocationInResults: true,
 };

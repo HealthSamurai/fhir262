@@ -7,11 +7,15 @@ class Fhir262Reporter {
     this.implName = process.env.FHIR262_IMPL_NAME ?? "unknown";
     this.startedAt = new Date().toISOString();
     this.t0 = Date.now();
+    this.rootDir = process.cwd();
     this.results = [];
   }
-  onTestCaseResult(_test, tc) {
+  onTestCaseResult(test, tc) {
     this.results.push({
       id: [...tc.ancestorTitles, tc.title].join(" > "),
+      file: test.path ? path.relative(this.rootDir, test.path) : undefined,
+      line: tc.location?.line,
+      col: tc.location?.column,
       status:
         tc.status === "passed"
           ? "pass"
