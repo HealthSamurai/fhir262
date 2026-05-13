@@ -1,0 +1,239 @@
+{
+  "meta": {
+    "id": "run-2026-05-13-155251",
+    "startedAt": "2026-05-13T15:52:51.634Z",
+    "duration_ms": 93751,
+    "commit": "e1b21d4",
+    "branch": "main",
+    "commitMessage": "Add Microsoft FHIR Server impl + matcher tweaks",
+    "repoUrl": "https://github.com/HealthSamurai/fhir262",
+    "suiteVersion": "0.0.0"
+  },
+  "impls": [
+    {
+      "id": "aidbox",
+      "label": "Aidbox"
+    },
+    {
+      "id": "medplum",
+      "label": "Medplum"
+    },
+    {
+      "id": "msfhir",
+      "label": "Msfhir"
+    }
+  ],
+  "modules": [
+    {
+      "id": "validation",
+      "label": "Validation",
+      "tests": [
+        {
+          "id": "tests/validation/validate-patient/test.ts::simple validation > validates a minimal Patient with no errors",
+          "title": "validates a minimal Patient with no errors",
+          "fullName": "simple validation > validates a minimal Patient with no errors",
+          "file": "tests/validation/validate-patient/test.ts",
+          "line": 17
+        },
+        {
+          "id": "tests/validation/validate-patient/test.ts::simple validation > reports an error when Patient.name has the wrong type",
+          "title": "reports an error when Patient.name has the wrong type",
+          "fullName": "simple validation > reports an error when Patient.name has the wrong type",
+          "file": "tests/validation/validate-patient/test.ts",
+          "line": 25
+        },
+        {
+          "id": "tests/validation/validate-patient/test.ts::simple validation > accepts a Patient with a valid gender code",
+          "title": "accepts a Patient with a valid gender code",
+          "fullName": "simple validation > accepts a Patient with a valid gender code",
+          "file": "tests/validation/validate-patient/test.ts",
+          "line": 34
+        },
+        {
+          "id": "tests/validation/validate-patient/test.ts::simple validation > reports an error for a Patient with an invalid gender code",
+          "title": "reports an error for a Patient with an invalid gender code",
+          "fullName": "simple validation > reports an error for a Patient with an invalid gender code",
+          "file": "tests/validation/validate-patient/test.ts",
+          "line": 42
+        }
+      ]
+    }
+  ],
+  "statuses": {
+    "validation": {
+      "tests/validation/validate-patient/test.ts::simple validation > validates a minimal Patient with no errors": {
+        "aidbox": {
+          "status": "pass",
+          "duration_ms": 63
+        },
+        "medplum": {
+          "status": "pass",
+          "duration_ms": 13
+        },
+        "msfhir": {
+          "status": "pass",
+          "duration_ms": 5929
+        }
+      },
+      "tests/validation/validate-patient/test.ts::simple validation > reports an error when Patient.name has the wrong type": {
+        "aidbox": {
+          "status": "pass",
+          "duration_ms": 24
+        },
+        "medplum": {
+          "status": "pass",
+          "duration_ms": 8
+        },
+        "msfhir": {
+          "status": "fail",
+          "duration_ms": 35,
+          "error": {
+            "assertion": "expect(received).toHaveIssueWithExpression(expression)",
+            "expected": "an issue with expression \"Patient.name\"",
+            "received": "{\n  \"status\": 200,\n  \"body\": {\n    \"resourceType\": \"OperationOutcome\",\n    \"id\": \"5031a45b-d39e-4d7c-bbad-ff12f9a435f0\",\n    \"meta\": {\n      \"lastUpdated\": \"2026-05-13T15:53:53.3808946+00:00\"\n    },\n    \"issue\": [\n      {\n        \"severity\": \"error\",\n        \"code\": \"invalid\",\n        \"diagnostics\": \"Error occurred when parsing model: 'Type checking the data: Since type HumanName is not a primitive, it cannot have a value (at Resource.name[0])'.\"\n      }\n    ]\n  }\n}",
+            "stack": [
+              "at Object.<anonymous> (tests/validation/validate-patient/test.ts:31:17)"
+            ],
+            "codeFrame": {
+              "file": "tests/validation/validate-patient/test.ts",
+              "line": 31,
+              "col": 17,
+              "lines": [
+                {
+                  "number": 29,
+                  "text": "    });"
+                },
+                {
+                  "number": 30,
+                  "text": "    expect(res).toBeInvalid();"
+                },
+                {
+                  "number": 31,
+                  "text": "    expect(res).toHaveIssueWithExpression(\"Patient.name\");"
+                },
+                {
+                  "number": 32,
+                  "text": "  });"
+                },
+                {
+                  "number": 33,
+                  "text": ""
+                },
+                {
+                  "number": 34,
+                  "text": "  it(\"accepts a Patient with a valid gender code\", async () => {"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "tests/validation/validate-patient/test.ts::simple validation > accepts a Patient with a valid gender code": {
+        "aidbox": {
+          "status": "pass",
+          "duration_ms": 300
+        },
+        "medplum": {
+          "status": "pass",
+          "duration_ms": 4
+        },
+        "msfhir": {
+          "status": "pass",
+          "duration_ms": 193
+        }
+      },
+      "tests/validation/validate-patient/test.ts::simple validation > reports an error for a Patient with an invalid gender code": {
+        "aidbox": {
+          "status": "pass",
+          "duration_ms": 190
+        },
+        "medplum": {
+          "status": "fail",
+          "duration_ms": 7,
+          "error": {
+            "assertion": "expect(received).toBeInvalid()",
+            "expected": "at least one issue with severity \"error\" or \"fatal\"",
+            "received": "[{\"code\": \"informational\", \"details\": {\"text\": \"All OK\"}, \"severity\": \"information\"}]",
+            "stack": [
+              "at Object.<anonymous> (tests/validation/validate-patient/test.ts:47:17)"
+            ],
+            "codeFrame": {
+              "file": "tests/validation/validate-patient/test.ts",
+              "line": 47,
+              "col": 17,
+              "lines": [
+                {
+                  "number": 45,
+                  "text": "      gender: \"mmale\","
+                },
+                {
+                  "number": 46,
+                  "text": "    });"
+                },
+                {
+                  "number": 47,
+                  "text": "    expect(res).toBeInvalid();"
+                },
+                {
+                  "number": 48,
+                  "text": "    expect(res).toHaveIssueWithExpression(\"Patient.gender\");"
+                },
+                {
+                  "number": 49,
+                  "text": "  });"
+                },
+                {
+                  "number": 50,
+                  "text": "});"
+                }
+              ]
+            }
+          }
+        },
+        "msfhir": {
+          "status": "fail",
+          "duration_ms": 13,
+          "error": {
+            "assertion": "expect(received).toHaveIssueWithExpression(expression)",
+            "expected": "an issue with expression \"Patient.gender\"",
+            "received": "{\n  \"status\": 200,\n  \"body\": {\n    \"resourceType\": \"OperationOutcome\",\n    \"id\": \"25cc052a-f241-4dc0-b322-7c3f816620d1\",\n    \"meta\": {\n      \"lastUpdated\": \"2026-05-13T15:53:53.6176071+00:00\"\n    },\n    \"issue\": [\n      {\n        \"severity\": \"error\",\n        \"code\": \"invalid\",\n        \"diagnostics\": \"Error occurred when parsing model: 'While building a POCO: Literal 'mmale' is not a valid value for enumeration 'AdministrativeGender' (at Resource.gender[0])'.\"\n      }\n    ]\n  }\n}",
+            "stack": [
+              "at Object.<anonymous> (tests/validation/validate-patient/test.ts:48:17)"
+            ],
+            "codeFrame": {
+              "file": "tests/validation/validate-patient/test.ts",
+              "line": 48,
+              "col": 17,
+              "lines": [
+                {
+                  "number": 46,
+                  "text": "    });"
+                },
+                {
+                  "number": 47,
+                  "text": "    expect(res).toBeInvalid();"
+                },
+                {
+                  "number": 48,
+                  "text": "    expect(res).toHaveIssueWithExpression(\"Patient.gender\");"
+                },
+                {
+                  "number": 49,
+                  "text": "  });"
+                },
+                {
+                  "number": 50,
+                  "text": "});"
+                },
+                {
+                  "number": 51,
+                  "text": ""
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

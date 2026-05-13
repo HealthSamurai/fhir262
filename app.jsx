@@ -451,9 +451,20 @@ function FailureDetail({ result, test, impl, blobUrl }) {
           <div className="line line-indent">
             <span className="kw">Expected:</span> <span className="c-expected">{e.expected}</span>
           </div>
-          <div className="line line-indent">
-            <span className="kw">Received:</span> <span className="c-received">{e.received}</span>
-          </div>
+          {e.received.includes("\n") ? (
+            <>
+              <div className="line line-indent">
+                <span className="kw">Received:</span>
+              </div>
+              {e.received.split("\n").map((rl, i) => (
+                <div key={i} className="line line-indent c-received">{rl || " "}</div>
+              ))}
+            </>
+          ) : (
+            <div className="line line-indent">
+              <span className="kw">Received:</span> <span className="c-received">{e.received}</span>
+            </div>
+          )}
           <div className="line line-blank">{"\u00A0"}</div>
           {e.codeFrame && <CodeFrame frame={e.codeFrame} />}
           {e.codeFrame && <div className="line line-blank">{"\u00A0"}</div>}
