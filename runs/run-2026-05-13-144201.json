@@ -1,0 +1,301 @@
+{
+  "meta": {
+    "id": "run-2026-05-13-144201",
+    "startedAt": "2026-05-13T14:42:01.112Z",
+    "duration_ms": 61102,
+    "commit": "de9dea8",
+    "branch": "main",
+    "commitMessage": "Add conformance matrix UI + Pages build pipeline",
+    "repoUrl": "https://github.com/HealthSamurai/fhir262",
+    "suiteVersion": "0.0.0"
+  },
+  "impls": [
+    {
+      "id": "aidbox",
+      "label": "Aidbox"
+    },
+    {
+      "id": "medplum",
+      "label": "Medplum"
+    }
+  ],
+  "modules": [
+    {
+      "id": "validation",
+      "label": "Validation",
+      "tests": [
+        {
+          "id": "tests/validation/validate-patient/test.ts::simple validation > validates a minimal Patient with no errors",
+          "title": "validates a minimal Patient with no errors",
+          "fullName": "simple validation > validates a minimal Patient with no errors",
+          "file": "tests/validation/validate-patient/test.ts",
+          "line": 17
+        },
+        {
+          "id": "tests/validation/validate-patient/test.ts::simple validation > reports an error when Patient.name has the wrong type",
+          "title": "reports an error when Patient.name has the wrong type",
+          "fullName": "simple validation > reports an error when Patient.name has the wrong type",
+          "file": "tests/validation/validate-patient/test.ts",
+          "line": 25
+        },
+        {
+          "id": "tests/validation/validate-patient/test.ts::simple validation > accepts a Patient with a valid gender code",
+          "title": "accepts a Patient with a valid gender code",
+          "fullName": "simple validation > accepts a Patient with a valid gender code",
+          "file": "tests/validation/validate-patient/test.ts",
+          "line": 34
+        },
+        {
+          "id": "tests/validation/validate-patient/test.ts::simple validation > reports an error for a Patient with an invalid gender code",
+          "title": "reports an error for a Patient with an invalid gender code",
+          "fullName": "simple validation > reports an error for a Patient with an invalid gender code",
+          "file": "tests/validation/validate-patient/test.ts",
+          "line": 42
+        }
+      ]
+    }
+  ],
+  "statuses": {
+    "validation": {
+      "tests/validation/validate-patient/test.ts::simple validation > validates a minimal Patient with no errors": {
+        "aidbox": {
+          "status": "fail",
+          "duration_ms": 1,
+          "error": {
+            "assertion": "AIDBOX_LICENSE is not set (add it to .env)",
+            "expected": "",
+            "received": "",
+            "stack": [
+              "at Object.startWithCoreOnly (impl/aidbox/index.ts:21:25)",
+              "at Object.<anonymous> (tests/validation/validate-patient/test.ts:9:27)"
+            ],
+            "codeFrame": {
+              "file": "impl/aidbox/index.ts",
+              "line": 21,
+              "col": 25,
+              "lines": [
+                {
+                  "number": 19,
+                  "text": ""
+                },
+                {
+                  "number": 20,
+                  "text": "    const license = process.env.AIDBOX_LICENSE;"
+                },
+                {
+                  "number": 21,
+                  "text": "    if (!license) throw new Error(\"AIDBOX_LICENSE is not set (add it to .env)\");"
+                },
+                {
+                  "number": 22,
+                  "text": ""
+                },
+                {
+                  "number": 23,
+                  "text": "    const t0 = Date.now();"
+                },
+                {
+                  "number": 24,
+                  "text": "    log(`starting environment for FHIR ${version}`);"
+                }
+              ]
+            }
+          }
+        },
+        "medplum": {
+          "status": "pass",
+          "duration_ms": 12
+        }
+      },
+      "tests/validation/validate-patient/test.ts::simple validation > reports an error when Patient.name has the wrong type": {
+        "aidbox": {
+          "status": "fail",
+          "duration_ms": 0,
+          "error": {
+            "assertion": "AIDBOX_LICENSE is not set (add it to .env)",
+            "expected": "",
+            "received": "",
+            "stack": [
+              "at Object.startWithCoreOnly (impl/aidbox/index.ts:21:25)",
+              "at Object.<anonymous> (tests/validation/validate-patient/test.ts:9:27)"
+            ],
+            "codeFrame": {
+              "file": "impl/aidbox/index.ts",
+              "line": 21,
+              "col": 25,
+              "lines": [
+                {
+                  "number": 19,
+                  "text": ""
+                },
+                {
+                  "number": 20,
+                  "text": "    const license = process.env.AIDBOX_LICENSE;"
+                },
+                {
+                  "number": 21,
+                  "text": "    if (!license) throw new Error(\"AIDBOX_LICENSE is not set (add it to .env)\");"
+                },
+                {
+                  "number": 22,
+                  "text": ""
+                },
+                {
+                  "number": 23,
+                  "text": "    const t0 = Date.now();"
+                },
+                {
+                  "number": 24,
+                  "text": "    log(`starting environment for FHIR ${version}`);"
+                }
+              ]
+            }
+          }
+        },
+        "medplum": {
+          "status": "pass",
+          "duration_ms": 8
+        }
+      },
+      "tests/validation/validate-patient/test.ts::simple validation > accepts a Patient with a valid gender code": {
+        "aidbox": {
+          "status": "fail",
+          "duration_ms": 0,
+          "error": {
+            "assertion": "AIDBOX_LICENSE is not set (add it to .env)",
+            "expected": "",
+            "received": "",
+            "stack": [
+              "at Object.startWithCoreOnly (impl/aidbox/index.ts:21:25)",
+              "at Object.<anonymous> (tests/validation/validate-patient/test.ts:9:27)"
+            ],
+            "codeFrame": {
+              "file": "impl/aidbox/index.ts",
+              "line": 21,
+              "col": 25,
+              "lines": [
+                {
+                  "number": 19,
+                  "text": ""
+                },
+                {
+                  "number": 20,
+                  "text": "    const license = process.env.AIDBOX_LICENSE;"
+                },
+                {
+                  "number": 21,
+                  "text": "    if (!license) throw new Error(\"AIDBOX_LICENSE is not set (add it to .env)\");"
+                },
+                {
+                  "number": 22,
+                  "text": ""
+                },
+                {
+                  "number": 23,
+                  "text": "    const t0 = Date.now();"
+                },
+                {
+                  "number": 24,
+                  "text": "    log(`starting environment for FHIR ${version}`);"
+                }
+              ]
+            }
+          }
+        },
+        "medplum": {
+          "status": "pass",
+          "duration_ms": 5
+        }
+      },
+      "tests/validation/validate-patient/test.ts::simple validation > reports an error for a Patient with an invalid gender code": {
+        "aidbox": {
+          "status": "fail",
+          "duration_ms": 0,
+          "error": {
+            "assertion": "AIDBOX_LICENSE is not set (add it to .env)",
+            "expected": "",
+            "received": "",
+            "stack": [
+              "at Object.startWithCoreOnly (impl/aidbox/index.ts:21:25)",
+              "at Object.<anonymous> (tests/validation/validate-patient/test.ts:9:27)"
+            ],
+            "codeFrame": {
+              "file": "impl/aidbox/index.ts",
+              "line": 21,
+              "col": 25,
+              "lines": [
+                {
+                  "number": 19,
+                  "text": ""
+                },
+                {
+                  "number": 20,
+                  "text": "    const license = process.env.AIDBOX_LICENSE;"
+                },
+                {
+                  "number": 21,
+                  "text": "    if (!license) throw new Error(\"AIDBOX_LICENSE is not set (add it to .env)\");"
+                },
+                {
+                  "number": 22,
+                  "text": ""
+                },
+                {
+                  "number": 23,
+                  "text": "    const t0 = Date.now();"
+                },
+                {
+                  "number": 24,
+                  "text": "    log(`starting environment for FHIR ${version}`);"
+                }
+              ]
+            }
+          }
+        },
+        "medplum": {
+          "status": "fail",
+          "duration_ms": 7,
+          "error": {
+            "assertion": "expect(received).toBeInvalid()",
+            "expected": "at least one issue with severity \"error\" or \"fatal\"",
+            "received": "[{\"code\": \"informational\", \"details\": {\"text\": \"All OK\"}, \"severity\": \"information\"}]",
+            "stack": [
+              "at Object.<anonymous> (tests/validation/validate-patient/test.ts:47:17)"
+            ],
+            "codeFrame": {
+              "file": "tests/validation/validate-patient/test.ts",
+              "line": 47,
+              "col": 17,
+              "lines": [
+                {
+                  "number": 45,
+                  "text": "      gender: \"mmale\","
+                },
+                {
+                  "number": 46,
+                  "text": "    });"
+                },
+                {
+                  "number": 47,
+                  "text": "    expect(res).toBeInvalid();"
+                },
+                {
+                  "number": 48,
+                  "text": "    expect(res).toHaveIssueAt(\"Patient.gender\");"
+                },
+                {
+                  "number": 49,
+                  "text": "  });"
+                },
+                {
+                  "number": 50,
+                  "text": "});"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
