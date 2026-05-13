@@ -81,7 +81,7 @@ expect.extend({
     };
   },
 
-  toHaveIssueAt(received: Response, expression: string) {
+  toHaveIssueWithExpression(received: Response, expression: string) {
     const issues = issuesOf(received);
     const expressions = issues.flatMap((i) => i.expression ?? []);
     const pass = expressions.includes(expression);
@@ -89,7 +89,7 @@ expect.extend({
       pass,
       message: () => {
         const hint = this.utils.matcherHint(
-          "toHaveIssueAt",
+          "toHaveIssueWithExpression",
           "received",
           "expression",
           { isNot: this.isNot }
@@ -98,7 +98,7 @@ expect.extend({
           hint,
           "",
           `Expected: an issue with expression ${this.utils.printExpected(expression)}`,
-          `Received: ${this.utils.printReceived(expressions)}`,
+          `Received:\n${JSON.stringify(received, null, 2)}`,
         ].join("\n");
       },
     };
@@ -109,11 +109,11 @@ declare module "expect" {
   interface AsymmetricMatchers {
     toBeValid(): void;
     toBeInvalid(): void;
-    toHaveIssueAt(expression: string): void;
+    toHaveIssueWithExpression(expression: string): void;
   }
   interface Matchers<R> {
     toBeValid(): R;
     toBeInvalid(): R;
-    toHaveIssueAt(expression: string): R;
+    toHaveIssueWithExpression(expression: string): R;
   }
 }

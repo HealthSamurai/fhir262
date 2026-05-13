@@ -28,7 +28,7 @@ describe("simple validation", () => {
       name: "John",
     });
     expect(res).toBeInvalid();
-    expect(res).toHaveIssueAt("Patient.name");
+    expect(res).toHaveIssueWithExpression("Patient.name");
   });
 
   it("accepts a Patient with a valid gender code", async () => {
@@ -45,6 +45,6 @@ describe("simple validation", () => {
       gender: "mmale",
     });
     expect(res).toBeInvalid();
-    expect(res).toHaveIssueAt("Patient.gender");
+    expect(res).toHaveIssueWithExpression("Patient.gender");
   });
 });

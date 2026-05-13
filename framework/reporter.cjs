@@ -47,7 +47,19 @@ function parseFailure(failureDetail, failureMessages, rootDir) {
   const assertionLine =
     msgLines.find((l) => l.trim().startsWith("expect(")) || firstNonEmpty || "";
   const expectedLine = msgLines.find((l) => l.startsWith("Expected:"));
-  const receivedLine = msgLines.find((l) => l.startsWith("Received:"));
+  // Received: may span multiple lines (matchers like toHaveIssueWithExpression
+  // pretty-print a JSON body below the prefix), so we collect from the prefix
+  // line to the end of the message rather than grabbing a single line.
+  const receivedIdx = msgLines.findIndex((l) => l.startsWith("Received:"));
+  const receivedBlock =
+    receivedIdx === -1
+      ? ""
+      : [
+          msgLines[receivedIdx].slice("Received:".length),
+          ...msgLines.slice(receivedIdx + 1),
+        ]
+          .join("\n")
+          .trim();
 
   const rootPrefix = rootDir + path.sep;
   const stack = getStackTraceLines(stackOnly)
@@ -58,7 +70,7 @@ function parseFailure(failureDetail, failureMessages, rootDir) {
   return {
     assertion: assertionLine.trim(),
     expected: expectedLine ? expectedLine.slice("Expected:".length).trim() : "",
-    received: receivedLine ? receivedLine.slice("Received:".length).trim() : "",
+    received: receivedBlock,
     stack,
     codeFrame: buildCodeFrame(stackOnly, rootDir) || undefined,
   };

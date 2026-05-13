@@ -3,6 +3,8 @@
 A uniform FHIR server conformance test suite that runs against multiple
 FHIR server implementations and produces a comparison report.
 
+**Live conformance matrix: <https://healthsamurai.github.io/fhir262>**
+
 The name nods to [tc39/test262](https://github.com/tc39/test262): one
 growing suite, multiple implementations, comparison output.
 
@@ -26,6 +28,7 @@ Four components:
 ```
 make test-aidbox                                              # Aidbox (needs Docker + AIDBOX_LICENSE)
 make test-medplum                                             # Medplum (needs Docker)
+make test-msfhir                                              # Microsoft FHIR Server (needs Docker)
 bun bin/run.ts -impl impl/stub/index.ts -out report.json      # write a JSON report
 ```
 

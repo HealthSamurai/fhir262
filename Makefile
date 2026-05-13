@@ -1,10 +1,19 @@
-.PHONY: test-all test-aidbox test-medplum ui-dist ui-serve clean-dist
+.PHONY: fresh clean test-all test-aidbox test-medplum test-msfhir ui-dist ui-serve clean-dist
+
+
+clean:
+	rm -rf $(RESULTS) $(DIST)
+
+fresh:
+	$(MAKE) clean
+	$(MAKE) test-all
+	$(MAKE) ui-dist
 
 RESULTS := .results
 DIST    := dist
 
 test-all:
-	$(MAKE) -j2 -k test-aidbox test-medplum
+	$(MAKE) -j3 -k test-aidbox test-medplum test-msfhir
 
 test-aidbox:
 	@mkdir -p $(RESULTS)
@@ -14,9 +23,10 @@ test-medplum:
 	@mkdir -p $(RESULTS)
 	bun bin/run.ts -impl impl/medplum/index.ts -out $(RESULTS)/medplum.json
 
-# Assemble the UI + a merged run JSON from .results/ into dist/. Pre-existing
-# runs under dist/runs/ are preserved (this is how CI keeps history across
-# deploys — restore the previous dist/runs/ first, then run this target).
+test-msfhir:
+	@mkdir -p $(RESULTS)
+	bun bin/run.ts -impl impl/msfhir/index.ts -out $(RESULTS)/msfhir.json
+
 ui-dist:
 	bun bin/build.ts -results $(RESULTS) -dist $(DIST)
 
