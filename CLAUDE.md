@@ -50,7 +50,7 @@ fhir262/
 │   ├── log.ts                  # createLogger(name), since(t0) — shared logging helpers for impls
 │   └── reporter.cjs            # custom jest reporter; writes JSON report to FHIR262_OUT_PATH
 │
-├── plans/                      # design plans
+├── .plans/                     # design plans (hidden — local design notes, still tracked)
 └── .results/                   # gitignored local outputs
 ```
 
