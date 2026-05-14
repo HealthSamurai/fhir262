@@ -36,9 +36,11 @@ function issuesOf(res: unknown): Issue[] {
 
 expect.extend({
   toBeValid(received: Response) {
+    const status = received?.status;
+    const statusOk = typeof status === "number" && status >= 200 && status < 300;
     const issues = issuesOf(received);
     const failures = issues.filter(isErrorIssue);
-    const pass = failures.length === 0;
+    const pass = statusOk && failures.length === 0;
     return {
       pass,
       message: () => {
@@ -46,8 +48,8 @@ expect.extend({
         return [
           hint,
           "",
-          `Expected: no issues with severity ${this.utils.printExpected("error")} or ${this.utils.printExpected("fatal")}`,
-          `Received: ${this.utils.printReceived(failures)}`,
+          `Expected: status in ${this.utils.printExpected("[200, 300)")} and no issues with severity ${this.utils.printExpected("error")} or ${this.utils.printExpected("fatal")}`,
+          `Received: status ${this.utils.printReceived(status)}, issues ${this.utils.printReceived(failures)}`,
         ].join("\n");
       },
     };

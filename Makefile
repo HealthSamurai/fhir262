@@ -18,16 +18,18 @@ test-all:
 TMUX_SESSION := fhir262-tests
 
 # Same impls as test-all, but each run gets its own tmux pane so output
-# streams live side-by-side. Panes close as their run finishes; the session
-# auto-closes when the last pane exits.
+# streams live side-by-side. When a run finishes, its pane drops into an
+# interactive shell so the output stays visible — exit the shell to close
+# the pane; the session closes when the last pane exits.
 test-all-tmux:
+	$(MAKE) clean
 	@command -v tmux >/dev/null || { echo "tmux is required for test-all-tmux"; exit 1; }
 	@mkdir -p $(RESULTS)
 	@tmux kill-session -t $(TMUX_SESSION) 2>/dev/null || true
-	@tmux new-session -d -s $(TMUX_SESSION) "$(MAKE) test-aidbox"
-	@tmux split-window -t $(TMUX_SESSION) "$(MAKE) test-hapi"
-	@tmux split-window -t $(TMUX_SESSION) "$(MAKE) test-medplum"
-	@tmux split-window -t $(TMUX_SESSION) "$(MAKE) test-msfhir"
+	@tmux new-session -d -s $(TMUX_SESSION) "$(MAKE) test-aidbox; exec $$SHELL"
+	@tmux split-window -t $(TMUX_SESSION) "$(MAKE) test-hapi; exec $$SHELL"
+	@tmux split-window -t $(TMUX_SESSION) "$(MAKE) test-medplum; exec $$SHELL"
+	@tmux split-window -t $(TMUX_SESSION) "$(MAKE) test-msfhir; exec $$SHELL"
 	@tmux select-layout -t $(TMUX_SESSION) tiled
 	@tmux attach -t $(TMUX_SESSION)
 
