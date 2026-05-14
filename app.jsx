@@ -134,7 +134,15 @@ function RunHistory({ open, anchorRect, onClose }) {
 
   return (
     <>
-      <div className="popover-scrim" onMouseDown={(e) => e.stopPropagation()} />
+      <div
+        className="popover-scrim"
+        onMouseDown={(e) => {
+          // Backdrop click closes the popover. The popover itself is a
+          // sibling node, so we don't need to check the target.
+          e.preventDefault();
+          onClose();
+        }}
+      />
       <div className="run-pop" style={style} ref={ref}>
         <div className="run-pop-head">
           <div className="run-pop-title">Run history</div>
@@ -239,28 +247,20 @@ function Header() {
         </div>
       </div>
       <div className="hdr-meta">
-        <div className="meta-row">
-          <span className="meta-k">branch</span>
-          <span className="meta-v mono">{meta.branch}</span>
-          <span className="meta-dot" />
-          <span className="meta-k">commit</span>
-          <a className="meta-v mono link" href={`${meta.repoUrl}/commit/${meta.commit}`} target="_blank" rel="noopener noreferrer">{meta.commit}</a>
-          <span className="meta-dot" />
-          <span className="meta-k">suite</span>
-          <span className="meta-v mono">v{meta.suiteVersion}</span>
-        </div>
         <button
-          className="meta-row meta-row-2 meta-row-btn"
+          className={`meta-row meta-row-btn ${histOpen ? "meta-row-btn-open" : ""}`}
           onClick={openHist}
           ref={btnRef}
           title="Show run history"
+          aria-expanded={histOpen}
+          aria-label="Show run history"
         >
           <span className="meta-k">{fmtDate(meta.startedAt)}</span>
           <span className="meta-dot" />
-          <span className="meta-k">{fmtDuration(meta.duration_ms)}</span>
+          <span className="meta-v mono">{meta.branch}</span>
           <span className="meta-dot" />
-          <span className="meta-k">{totalTests} tests · {window.IMPLS.length} impls · {window.MODULES.length} modules</span>
-          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" className="meta-row-chev">
+          <span className="meta-v mono">{meta.commit}</span>
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" className="meta-row-chev">
             <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
@@ -496,11 +496,21 @@ function Matrix({ module: mod, impls, visibleImpls, filters, query }) {
   const blobUrl = (file, line) =>
     `${repoUrl}/blob/${commit}/${file}${line ? `#L${line}` : ""}`;
 
-  // Derive group key from test.file: file basename (e.g. "validate-patient.test.ts").
-  // Each unique file becomes one section.
+  // Derive group key from test.file: the path within the module
+  // (everything after "tests/<module>/"). Yields "validate-patient/test.ts"
+  // for tests/validation/validate-patient/test.ts and "test.ts" when the
+  // test sits directly in the module directory.
   const groupForTest = useCallback((test) => {
     const parts = test.file.split("/");
-    return parts[parts.length - 1];
+    return parts.length > 2 ? parts.slice(2).join("/") : parts[parts.length - 1];
+  }, []);
+
+  // The describe path is everything in fullName except the trailing it() title.
+  // Returns null when the test has no surrounding describe.
+  const describePathOf = useCallback((test) => {
+    const full = test.fullName || test.title;
+    const segs = full.split(" > ");
+    return segs.length > 1 ? segs.slice(0, -1) : null;
   }, []);
 
   // Filter tests
@@ -509,9 +519,10 @@ function Matrix({ module: mod, impls, visibleImpls, filters, query }) {
       if (query) {
         const q = query.toLowerCase();
         const inTitle = test.title.toLowerCase().includes(q);
+        const inFull = (test.fullName || "").toLowerCase().includes(q);
         const inId = test.id.toLowerCase().includes(q);
         const inGroup = groupForTest(test).toLowerCase().includes(q);
-        if (!inTitle && !inId && !inGroup) return false;
+        if (!inTitle && !inFull && !inId && !inGroup) return false;
       }
       const results = visibleImpls.map(i => statusFor(mod.id, test.id, i.id));
       if (filters.failingOnly) {
@@ -535,21 +546,30 @@ function Matrix({ module: mod, impls, visibleImpls, filters, query }) {
         .map((t, i) => ({ t, i, r: rank(t) }))
         .sort((a, b) => a.r - b.r || a.i - b.i)
         .map(x => x.t);
-      return sorted.map(t => ({ kind: "test", test: t }));
+      return sorted.map(t => ({ kind: "test", test: t, nested: false }));
     }
-    // Grouped: preserve file order, emit group header whenever group changes.
+    // Grouped: preserve file order, emit file header on file change and a
+    // describe sub-header on describe-path change.
     const out = [];
-    let lastGroup = null;
+    let lastFile = null;
+    let lastDescribeKey = null;
     for (const test of filteredTests) {
-      const g = groupForTest(test);
-      if (g !== lastGroup) {
-        out.push({ kind: "group", group: g, dir: test.file });
-        lastGroup = g;
+      const f = groupForTest(test);
+      if (f !== lastFile) {
+        out.push({ kind: "group", group: f, dir: test.file });
+        lastFile = f;
+        lastDescribeKey = null;
       }
-      out.push({ kind: "test", test });
+      const desc = describePathOf(test);
+      const key = desc ? desc.join(" > ") : null;
+      if (key !== lastDescribeKey) {
+        if (desc) out.push({ kind: "describe", segments: desc, key });
+        lastDescribeKey = key;
+      }
+      out.push({ kind: "test", test, nested: !!desc });
     }
     return out;
-  }, [filteredTests, sortByImpl, mod, groupForTest]);
+  }, [filteredTests, sortByImpl, mod, groupForTest, describePathOf]);
 
   // Reset expansion + sort when module changes
   useEffect(() => { setExpanded(null); setSortByImpl(null); }, [mod.id]);
@@ -648,14 +668,38 @@ function Matrix({ module: mod, impls, visibleImpls, filters, query }) {
                 </a>
               );
             }
+            if (item.kind === "describe") {
+              return (
+                <div
+                  key={`d-${item.key}-${idx}`}
+                  className="cell cell-describe"
+                  style={{ gridColumn: `1 / span ${visibleImpls.length + 1}` }}
+                  title={item.key}
+                >
+                  <div className="cell-describe-inner">
+                    {item.segments.map((seg, i) => (
+                      <React.Fragment key={i}>
+                        {i > 0 && <span className="describe-sep">›</span>}
+                        <span className="describe-seg">{seg}</span>
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
             const test = item.test;
-            const exp = expanded && expanded.testId === test.id;
-            const expandedImpl = exp ? visibleImpls.find(i => i.id === expanded.implId) : null;
+            const expandedImpl = expanded && expanded.testId === test.id
+              ? visibleImpls.find(i => i.id === expanded.implId)
+              : null;
+            // Treat the row as expanded only if the impl is still visible.
+            // Hiding the impl while expanded triggers a re-render before the
+            // reset effect runs, so we have to guard here too.
+            const exp = !!expandedImpl;
             const expandedResult = exp ? statusFor(mod.id, test.id, expanded.implId) : null;
             return (
               <React.Fragment key={`t-${test.id}`}>
                 <a
-                  className="cell cell-row-name"
+                  className={`cell cell-row-name ${item.nested ? "cell-row-name-nested" : ""}`}
                   href={blobUrl(test.file, test.line)}
                   target="_blank"
                   rel="noopener noreferrer"
