@@ -20,7 +20,7 @@ async function validatePatient(body: object) {
   });
 }
 
-describe("Patient.active = object (primitive slot, object value)", () => {
+describe("Patient.active = object (primitive element, object value)", () => {
   let res: { status: number; body: unknown };
   beforeAll(async () => {
     res = await validatePatient({ active: { id: "1" } });
@@ -46,7 +46,7 @@ describe("Patient.name[0].given[0] = object (primitive-string item, object value
   });
 });
 
-describe("Patient.name = object (array slot, object value)", () => {
+describe("Patient.name = object (array element, object value)", () => {
   let res: { status: number; body: unknown };
   beforeAll(async () => {
     res = await validatePatient({ name: { family: "Ivan" } });
@@ -59,7 +59,7 @@ describe("Patient.name = object (array slot, object value)", () => {
   });
 });
 
-describe("Patient.gender = array (scalar slot, array value)", () => {
+describe("Patient.gender = array (scalar element, array value)", () => {
   let res: { status: number; body: unknown };
   beforeAll(async () => {
     res = await validatePatient({ gender: ["male"] });
