@@ -75,30 +75,36 @@ const server: Server = {
     log(`environment ready at ${baseUrl} in ${since(t0)}`);
     const authHeader = "Basic " + Buffer.from(`root:${ROOT_CLIENT_SECRET}`).toString("base64");
 
-    const post = async (path: string, params: unknown) => {
+    const request = async (method: string, path: string, body?: unknown) => {
       const reqPath = `/fhir${path}`;
       const tOp = Date.now();
       const res = await fetch(`${baseUrl}${reqPath}`, {
-        method: "POST",
+        method,
         headers: {
           "Content-Type": "application/fhir+json",
           Accept: "application/fhir+json",
           Authorization: authHeader,
         },
-        body: params == null ? undefined : JSON.stringify(params),
+        body: body == null ? undefined : JSON.stringify(body),
       });
       const text = await res.text();
-      log(`POST ${reqPath} → ${res.status} in ${since(tOp)}`);
-      let body: unknown = text;
+      log(`${method} ${reqPath} → ${res.status} in ${since(tOp)}`);
+      let parsed: unknown = text;
       try {
-        body = text.length > 0 ? JSON.parse(text) : null;
+        parsed = text.length > 0 ? JSON.parse(text) : null;
       } catch {}
-      return { status: res.status, body };
+      return { status: res.status, body: parsed };
     };
 
     const rest: Rest = {
-      operation: (resourceType, operation, params) => post(`/${resourceType}/${operation}`, params),
-      systemOperation: (operation, params) => post(`/${operation}`, params),
+      operation: (resourceType, operation, params) =>
+        request("POST", `/${resourceType}/${operation}`, params),
+      systemOperation: (operation, params) => request("POST", `/${operation}`, params),
+      read: (resourceType, id) => request("GET", `/${resourceType}/${id}`),
+      create: (resourceType, resource) => request("POST", `/${resourceType}`, resource),
+      update: (resourceType, id, resource) =>
+        request("PUT", `/${resourceType}/${id}`, resource),
+      delete: (resourceType, id) => request("DELETE", `/${resourceType}/${id}`),
     };
 
     return {

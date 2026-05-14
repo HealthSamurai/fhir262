@@ -1,5 +1,15 @@
 .PHONY: fresh clean test-all test-all-tmux test-aidbox test-hapi test-medplum test-msfhir ui-dist ui-serve clean-dist format format-check
 
+# Optional test filters (consumed by bin/run.ts via env).
+#   FILTER — jest test-path regex (matches against test file paths)
+#   NAME   — jest -t name pattern (matches describe/it titles)
+# Examples:
+#   make test-all FILTER=CRUD
+#   make test-aidbox FILTER=CRUD NAME='create returns 201'
+#   make test-all-tmux FILTER=validation
+#   make test-aidbox FILTER=validation-op       # just tests/validation/$validation-op.ts
+export FILTER
+export NAME
 
 clean:
 	rm -rf $(RESULTS) $(DIST)
@@ -26,10 +36,13 @@ test-all-tmux:
 	@command -v tmux >/dev/null || { echo "tmux is required for test-all-tmux"; exit 1; }
 	@mkdir -p $(RESULTS)
 	@tmux kill-session -t $(TMUX_SESSION) 2>/dev/null || true
-	@tmux new-session -d -s $(TMUX_SESSION) "$(MAKE) test-aidbox; exec $$SHELL"
-	@tmux split-window -t $(TMUX_SESSION) "$(MAKE) test-hapi; exec $$SHELL"
-	@tmux split-window -t $(TMUX_SESSION) "$(MAKE) test-medplum; exec $$SHELL"
-	@tmux split-window -t $(TMUX_SESSION) "$(MAKE) test-msfhir; exec $$SHELL"
+	@# Inline FILTER/NAME on each pane's command: an already-running tmux server
+	@# uses its own env snapshot for new sessions, so `export` in this Makefile
+	@# doesn't reach the panes. Setting them on the command line is reliable.
+	@tmux new-session -d -s $(TMUX_SESSION) "FILTER='$(FILTER)' NAME='$(NAME)' $(MAKE) test-aidbox; exec $$SHELL"
+	@tmux split-window -t $(TMUX_SESSION) "FILTER='$(FILTER)' NAME='$(NAME)' $(MAKE) test-hapi; exec $$SHELL"
+	@tmux split-window -t $(TMUX_SESSION) "FILTER='$(FILTER)' NAME='$(NAME)' $(MAKE) test-medplum; exec $$SHELL"
+	@tmux split-window -t $(TMUX_SESSION) "FILTER='$(FILTER)' NAME='$(NAME)' $(MAKE) test-msfhir; exec $$SHELL"
 	@tmux select-layout -t $(TMUX_SESSION) tiled
 	@tmux attach -t $(TMUX_SESSION)
 
