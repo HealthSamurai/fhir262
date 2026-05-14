@@ -1,6 +1,23 @@
 {
   "runs": [
     {
+      "id": "run-2026-05-14-130348",
+      "startedAt": "2026-05-14T13:03:48.852Z",
+      "duration_ms": 193628,
+      "commit": "5dd752b",
+      "commitMessage": "Add primitives validation tests; drop stub impl",
+      "branch": "main",
+      "impls": [
+        "aidbox",
+        "hapi",
+        "medplum",
+        "msfhir"
+      ],
+      "pass": 436,
+      "fail": 176,
+      "skipped": 0
+    },
+    {
       "id": "run-2026-05-14-121111",
       "startedAt": "2026-05-14T12:11:11.116Z",
       "duration_ms": 114766,
