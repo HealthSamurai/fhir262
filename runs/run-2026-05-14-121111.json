@@ -1,0 +1,387 @@
+{
+  "meta": {
+    "id": "run-2026-05-14-121111",
+    "startedAt": "2026-05-14T12:11:11.116Z",
+    "duration_ms": 114766,
+    "commit": "2e9b7ea",
+    "branch": "main",
+    "commitMessage": "ui enchancments",
+    "repoUrl": "https://github.com/HealthSamurai/fhir262",
+    "suiteVersion": "0.0.0"
+  },
+  "impls": [
+    {
+      "id": "aidbox",
+      "label": "Aidbox"
+    },
+    {
+      "id": "hapi",
+      "label": "Hapi"
+    },
+    {
+      "id": "medplum",
+      "label": "Medplum"
+    },
+    {
+      "id": "msfhir",
+      "label": "Msfhir"
+    }
+  ],
+  "modules": [
+    {
+      "id": "validation",
+      "label": "Validation",
+      "tests": [
+        {
+          "id": "tests/validation/simple-cases.ts::minimal resource (Patient) > is valid",
+          "title": "is valid",
+          "fullName": "minimal resource (Patient) > is valid",
+          "file": "tests/validation/simple-cases.ts",
+          "line": 17
+        },
+        {
+          "id": "tests/validation/simple-cases.ts::primitive value at a complex element (Patient.name) > is invalid",
+          "title": "is invalid",
+          "fullName": "primitive value at a complex element (Patient.name) > is invalid",
+          "file": "tests/validation/simple-cases.ts",
+          "line": 34
+        },
+        {
+          "id": "tests/validation/simple-cases.ts::primitive value at a complex element (Patient.name) > issue points at Patient.name",
+          "title": "issue points at Patient.name",
+          "fullName": "primitive value at a complex element (Patient.name) > issue points at Patient.name",
+          "file": "tests/validation/simple-cases.ts",
+          "line": 37
+        },
+        {
+          "id": "tests/validation/simple-cases.ts::valid code at a bound element (Patient.gender) > is valid",
+          "title": "is valid",
+          "fullName": "valid code at a bound element (Patient.gender) > is valid",
+          "file": "tests/validation/simple-cases.ts",
+          "line": 43
+        },
+        {
+          "id": "tests/validation/simple-cases.ts::invalid code at a bound element (Patient.gender) > is invalid",
+          "title": "is invalid",
+          "fullName": "invalid code at a bound element (Patient.gender) > is invalid",
+          "file": "tests/validation/simple-cases.ts",
+          "line": 60
+        },
+        {
+          "id": "tests/validation/simple-cases.ts::invalid code at a bound element (Patient.gender) > issue points at Patient.gender",
+          "title": "issue points at Patient.gender",
+          "fullName": "invalid code at a bound element (Patient.gender) > issue points at Patient.gender",
+          "file": "tests/validation/simple-cases.ts",
+          "line": 63
+        }
+      ]
+    }
+  ],
+  "statuses": {
+    "validation": {
+      "tests/validation/simple-cases.ts::minimal resource (Patient) > is valid": {
+        "aidbox": {
+          "status": "pass",
+          "duration_ms": 64
+        },
+        "hapi": {
+          "status": "pass",
+          "duration_ms": 4318
+        },
+        "medplum": {
+          "status": "pass",
+          "duration_ms": 11
+        },
+        "msfhir": {
+          "status": "pass",
+          "duration_ms": 7432
+        }
+      },
+      "tests/validation/simple-cases.ts::primitive value at a complex element (Patient.name) > is invalid": {
+        "aidbox": {
+          "status": "pass",
+          "duration_ms": 1
+        },
+        "hapi": {
+          "status": "pass",
+          "duration_ms": 1
+        },
+        "medplum": {
+          "status": "pass",
+          "duration_ms": 1
+        },
+        "msfhir": {
+          "status": "pass",
+          "duration_ms": 0
+        }
+      },
+      "tests/validation/simple-cases.ts::primitive value at a complex element (Patient.name) > issue points at Patient.name": {
+        "aidbox": {
+          "status": "pass",
+          "duration_ms": 0
+        },
+        "hapi": {
+          "status": "pass",
+          "duration_ms": 0
+        },
+        "medplum": {
+          "status": "pass",
+          "duration_ms": 0
+        },
+        "msfhir": {
+          "status": "fail",
+          "duration_ms": 2,
+          "error": {
+            "assertion": "expect(received).toHaveIssueWithExpression(expression)",
+            "expected": "an issue with expression \"Patient.name\"",
+            "received": "{\n  \"status\": 200,\n  \"body\": {\n    \"resourceType\": \"OperationOutcome\",\n    \"id\": \"76f45afb-67fb-46c7-a9fd-e5e93cf180a1\",\n    \"meta\": {\n      \"lastUpdated\": \"2026-05-14T12:12:28.0874491+00:00\"\n    },\n    \"issue\": [\n      {\n        \"severity\": \"error\",\n        \"code\": \"invalid\",\n        \"diagnostics\": \"Error occurred when parsing model: 'Type checking the data: Since type HumanName is not a primitive, it cannot have a value (at Resource.name[0])'.\"\n      }\n    ]\n  }\n}",
+            "stack": [
+              "at Object.<anonymous> (tests/validation/simple-cases.ts:38:17)"
+            ],
+            "codeFrame": {
+              "file": "tests/validation/simple-cases.ts",
+              "line": 38,
+              "col": 17,
+              "lines": [
+                {
+                  "number": 36,
+                  "text": "  });"
+                },
+                {
+                  "number": 37,
+                  "text": "  it(\"issue points at Patient.name\", () => {"
+                },
+                {
+                  "number": 38,
+                  "text": "    expect(res).toHaveIssueWithExpression(\"Patient.name\");"
+                },
+                {
+                  "number": 39,
+                  "text": "  });"
+                },
+                {
+                  "number": 40,
+                  "text": "});"
+                },
+                {
+                  "number": 41,
+                  "text": ""
+                }
+              ]
+            }
+          }
+        }
+      },
+      "tests/validation/simple-cases.ts::valid code at a bound element (Patient.gender) > is valid": {
+        "aidbox": {
+          "status": "pass",
+          "duration_ms": 290
+        },
+        "hapi": {
+          "status": "pass",
+          "duration_ms": 731
+        },
+        "medplum": {
+          "status": "pass",
+          "duration_ms": 5
+        },
+        "msfhir": {
+          "status": "pass",
+          "duration_ms": 221
+        }
+      },
+      "tests/validation/simple-cases.ts::invalid code at a bound element (Patient.gender) > is invalid": {
+        "aidbox": {
+          "status": "pass",
+          "duration_ms": 1
+        },
+        "hapi": {
+          "status": "pass",
+          "duration_ms": 1
+        },
+        "medplum": {
+          "status": "fail",
+          "duration_ms": 2,
+          "error": {
+            "assertion": "expect(received).toBeInvalid()",
+            "expected": "at least one issue with severity \"error\" or \"fatal\"",
+            "received": "[{\"code\": \"informational\", \"details\": {\"text\": \"All OK\"}, \"severity\": \"information\"}]",
+            "stack": [
+              "at Object.<anonymous> (tests/validation/simple-cases.ts:61:17)"
+            ],
+            "codeFrame": {
+              "file": "tests/validation/simple-cases.ts",
+              "line": 61,
+              "col": 17,
+              "lines": [
+                {
+                  "number": 59,
+                  "text": "  });"
+                },
+                {
+                  "number": 60,
+                  "text": "  it(\"is invalid\", () => {"
+                },
+                {
+                  "number": 61,
+                  "text": "    expect(res).toBeInvalid();"
+                },
+                {
+                  "number": 62,
+                  "text": "  });"
+                },
+                {
+                  "number": 63,
+                  "text": "  it(\"issue points at Patient.gender\", () => {"
+                },
+                {
+                  "number": 64,
+                  "text": "    expect(res).toHaveIssueWithExpression(\"Patient.gender\");"
+                }
+              ]
+            }
+          }
+        },
+        "msfhir": {
+          "status": "pass",
+          "duration_ms": 1
+        }
+      },
+      "tests/validation/simple-cases.ts::invalid code at a bound element (Patient.gender) > issue points at Patient.gender": {
+        "aidbox": {
+          "status": "pass",
+          "duration_ms": 0
+        },
+        "hapi": {
+          "status": "fail",
+          "duration_ms": 5,
+          "error": {
+            "assertion": "expect(received).toHaveIssueWithExpression(expression)",
+            "expected": "an issue with expression \"Patient.gender\"",
+            "received": "{\n  \"status\": 400,\n  \"body\": {\n    \"resourceType\": \"OperationOutcome\",\n    \"issue\": [\n      {\n        \"severity\": \"error\",\n        \"code\": \"processing\",\n        \"diagnostics\": \"HAPI-0450: Failed to parse request body as JSON resource. Error was: HAPI-1821: [element=\\\"gender\\\"] Invalid attribute value \\\"mmale\\\": Unknown AdministrativeGender code 'mmale'\"\n      }\n    ]\n  }\n}",
+            "stack": [
+              "at Object.<anonymous> (tests/validation/simple-cases.ts:64:17)"
+            ],
+            "codeFrame": {
+              "file": "tests/validation/simple-cases.ts",
+              "line": 64,
+              "col": 17,
+              "lines": [
+                {
+                  "number": 62,
+                  "text": "  });"
+                },
+                {
+                  "number": 63,
+                  "text": "  it(\"issue points at Patient.gender\", () => {"
+                },
+                {
+                  "number": 64,
+                  "text": "    expect(res).toHaveIssueWithExpression(\"Patient.gender\");"
+                },
+                {
+                  "number": 65,
+                  "text": "  });"
+                },
+                {
+                  "number": 66,
+                  "text": "});"
+                },
+                {
+                  "number": 67,
+                  "text": ""
+                }
+              ]
+            }
+          }
+        },
+        "medplum": {
+          "status": "fail",
+          "duration_ms": 1,
+          "error": {
+            "assertion": "expect(received).toHaveIssueWithExpression(expression)",
+            "expected": "an issue with expression \"Patient.gender\"",
+            "received": "{\n  \"status\": 200,\n  \"body\": {\n    \"resourceType\": \"OperationOutcome\",\n    \"id\": \"ok\",\n    \"issue\": [\n      {\n        \"severity\": \"information\",\n        \"code\": \"informational\",\n        \"details\": {\n          \"text\": \"All OK\"\n        }\n      }\n    ],\n    \"extension\": [\n      {\n        \"url\": \"https://medplum.com/fhir/StructureDefinition/tracing\",\n        \"extension\": [\n          {\n            \"url\": \"requestId\",\n            \"valueId\": \"6adaa7a0-bc0c-4c99-9e78-9e70613ba373\"\n          },\n          {\n            \"url\": \"traceId\",\n            \"valueId\": \"d5ffa2a6-2442-4784-b503-75f9746f9cf9\"\n          }\n        ]\n      }\n    ]\n  }\n}",
+            "stack": [
+              "at Object.<anonymous> (tests/validation/simple-cases.ts:64:17)"
+            ],
+            "codeFrame": {
+              "file": "tests/validation/simple-cases.ts",
+              "line": 64,
+              "col": 17,
+              "lines": [
+                {
+                  "number": 62,
+                  "text": "  });"
+                },
+                {
+                  "number": 63,
+                  "text": "  it(\"issue points at Patient.gender\", () => {"
+                },
+                {
+                  "number": 64,
+                  "text": "    expect(res).toHaveIssueWithExpression(\"Patient.gender\");"
+                },
+                {
+                  "number": 65,
+                  "text": "  });"
+                },
+                {
+                  "number": 66,
+                  "text": "});"
+                },
+                {
+                  "number": 67,
+                  "text": ""
+                }
+              ]
+            }
+          }
+        },
+        "msfhir": {
+          "status": "fail",
+          "duration_ms": 1,
+          "error": {
+            "assertion": "expect(received).toHaveIssueWithExpression(expression)",
+            "expected": "an issue with expression \"Patient.gender\"",
+            "received": "{\n  \"status\": 200,\n  \"body\": {\n    \"resourceType\": \"OperationOutcome\",\n    \"id\": \"94d9b4b3-b1db-4aa3-8a0b-35f6a680aa7a\",\n    \"meta\": {\n      \"lastUpdated\": \"2026-05-14T12:12:28.3701811+00:00\"\n    },\n    \"issue\": [\n      {\n        \"severity\": \"error\",\n        \"code\": \"invalid\",\n        \"diagnostics\": \"Error occurred when parsing model: 'While building a POCO: Literal 'mmale' is not a valid value for enumeration 'AdministrativeGender' (at Resource.gender[0])'.\"\n      }\n    ]\n  }\n}",
+            "stack": [
+              "at Object.<anonymous> (tests/validation/simple-cases.ts:64:17)"
+            ],
+            "codeFrame": {
+              "file": "tests/validation/simple-cases.ts",
+              "line": 64,
+              "col": 17,
+              "lines": [
+                {
+                  "number": 62,
+                  "text": "  });"
+                },
+                {
+                  "number": 63,
+                  "text": "  it(\"issue points at Patient.gender\", () => {"
+                },
+                {
+                  "number": 64,
+                  "text": "    expect(res).toHaveIssueWithExpression(\"Patient.gender\");"
+                },
+                {
+                  "number": 65,
+                  "text": "  });"
+                },
+                {
+                  "number": 66,
+                  "text": "});"
+                },
+                {
+                  "number": 67,
+                  "text": ""
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
