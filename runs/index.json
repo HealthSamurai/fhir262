@@ -1,6 +1,23 @@
 {
   "runs": [
     {
+      "id": "run-2026-05-14-153708",
+      "startedAt": "2026-05-14T15:37:08.962Z",
+      "duration_ms": 422510,
+      "commit": "525b0e1",
+      "commitMessage": "Add primitive-extensions test suite",
+      "branch": "main",
+      "impls": [
+        "aidbox",
+        "hapi",
+        "medplum",
+        "msfhir"
+      ],
+      "pass": 970,
+      "fail": 174,
+      "skipped": 0
+    },
+    {
       "id": "run-2026-05-14-145530",
       "startedAt": "2026-05-14T14:55:30.361Z",
       "duration_ms": 357398,
