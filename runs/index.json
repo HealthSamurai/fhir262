@@ -1,6 +1,23 @@
 {
   "runs": [
     {
+      "id": "run-2026-05-14-135909",
+      "startedAt": "2026-05-14T13:59:09.109Z",
+      "duration_ms": 189261,
+      "commit": "d052a51",
+      "commitMessage": "Add system-level $validate, path assertions, tmux runner",
+      "branch": "main",
+      "impls": [
+        "aidbox",
+        "hapi",
+        "medplum",
+        "msfhir"
+      ],
+      "pass": 586,
+      "fail": 94,
+      "skipped": 0
+    },
+    {
       "id": "run-2026-05-14-130348",
       "startedAt": "2026-05-14T13:03:48.852Z",
       "duration_ms": 193628,
