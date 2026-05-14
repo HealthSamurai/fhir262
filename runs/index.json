@@ -1,6 +1,23 @@
 {
   "runs": [
     {
+      "id": "run-2026-05-14-145530",
+      "startedAt": "2026-05-14T14:55:30.361Z",
+      "duration_ms": 357398,
+      "commit": "4ba3a80",
+      "commitMessage": "Add shape-mismatch test suite",
+      "branch": "main",
+      "impls": [
+        "aidbox",
+        "hapi",
+        "medplum",
+        "msfhir"
+      ],
+      "pass": 915,
+      "fail": 153,
+      "skipped": 0
+    },
+    {
       "id": "run-2026-05-14-142953",
       "startedAt": "2026-05-14T14:29:53.683Z",
       "duration_ms": 263894,
