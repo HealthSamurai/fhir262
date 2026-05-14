@@ -36,7 +36,7 @@ describe("valueBoolean", () => {
     expect(await validate("valueBoolean", v)).toBeValid();
   });
 
-  it.each(["true"])("rejects %p", async (v) => {
+  it.each([0, 1, "true", "True", "False", "TRUE", "", "yes", "no"])("rejects %p", async (v) => {
     expect(await validate("valueBoolean", v)).toBeInvalid();
   });
 
@@ -47,13 +47,16 @@ describe("valueBoolean", () => {
 });
 
 describe("valueInteger", () => {
-  it.each([12, -300, 2147483647, -2147483648])("accepts %p", async (v) => {
+  it.each([0, 12, -300, 2147483647, -2147483648])("accepts %p", async (v) => {
     expect(await validate("valueInteger", v)).toBeValid();
   });
 
-  it.each([3.1, "42", 2147483648, -2147483649])("rejects %p", async (v) => {
-    expect(await validate("valueInteger", v)).toBeInvalid();
-  });
+  it.each([3.1, "42", 2147483648, -2147483649, true, "3.14", "+42", "  42", ""])(
+    "rejects %p",
+    async (v) => {
+      expect(await validate("valueInteger", v)).toBeInvalid();
+    },
+  );
 
   it("rejection issue points at Parameters.parameter[0].value.ofType(integer)", async () => {
     const res = await validate("valueInteger", 3.1);
@@ -62,11 +65,11 @@ describe("valueInteger", () => {
 });
 
 describe("valueUnsignedInt", () => {
-  it.each([0, 1, 2147483647])("accepts %p", async (v) => {
+  it.each([0, 1, 100, 2147483647])("accepts %p", async (v) => {
     expect(await validate("valueUnsignedInt", v)).toBeValid();
   });
 
-  it.each([-1, 9.2, 2147483648])("rejects %p", async (v) => {
+  it.each([-1, 9.2, 2147483648, true, ""])("rejects %p", async (v) => {
     expect(await validate("valueUnsignedInt", v)).toBeInvalid();
   });
 
@@ -77,11 +80,11 @@ describe("valueUnsignedInt", () => {
 });
 
 describe("valuePositiveInt", () => {
-  it.each([1, 2147483647])("accepts %p", async (v) => {
+  it.each([1, 100, 2147483647])("accepts %p", async (v) => {
     expect(await validate("valuePositiveInt", v)).toBeValid();
   });
 
-  it.each([0, -1, 9.2, 2147483648])("rejects %p", async (v) => {
+  it.each([0, -1, 9.2, 2147483648, true, ""])("rejects %p", async (v) => {
     expect(await validate("valuePositiveInt", v)).toBeInvalid();
   });
 
@@ -92,11 +95,11 @@ describe("valuePositiveInt", () => {
 });
 
 describe("valueDecimal", () => {
-  it.each([12, 3.14, -62e3, 2147483648])("accepts %p", async (v) => {
+  it.each([0, 12, 3.14, 0.1, -0.1, -62e3, 1.5e-3, 2147483648])("accepts %p", async (v) => {
     expect(await validate("valueDecimal", v)).toBeValid();
   });
 
-  it.each(["9.2"])("rejects %p", async (v) => {
+  it.each(["9.2", true])("rejects %p", async (v) => {
     expect(await validate("valueDecimal", v)).toBeInvalid();
   });
 
@@ -108,11 +111,15 @@ describe("valueDecimal", () => {
 
 describe("valueDateTime", () => {
   it.each([
+    "0001",
     "2018",
     "1973-06",
     "1905-08-23",
+    "2000-02-29",
+    "2024-02-29",
     "2015-02-07T13:28:17-05:00",
     "2015-02-07T13:28:17+05:00",
+    "2015-02-07T13:28:17-14:00",
     "2017-01-01T00:00:00Z",
     "2017-01-01T00:00:00.000Z",
     "2017-01-01T00:00:00.000000000Z",
@@ -122,6 +129,7 @@ describe("valueDateTime", () => {
   });
 
   it.each([
+    "",
     "201",
     "0000",
     "000a",
@@ -137,6 +145,7 @@ describe("valueDateTime", () => {
     "2024-02-31",
     "2024-01-35",
     "2023-02-29",
+    "1900-02-29",
     "2015-02-07T25",
     "2015-02-07T15:",
     "2015-02-07T15:15",
@@ -150,9 +159,11 @@ describe("valueDateTime", () => {
     "2017-01-01T00:00:00a000Z",
     "2017-01-01T00:00:00.0000000000Z",
     "2017-01-01T00:00:00.000Y",
+    "2017-01-01t00:00:00z",
     "2015-02-07T13:28:17a05:00",
     "2015-02-07T13:28:17+24:00",
     "2015-02-07T13:28:17+14:01",
+    "2015-02-07T13:28:17-14:01",
     "2015-02-07T13:28:17+14a00",
   ])("rejects %p", async (v) => {
     expect(await validate("valueDateTime", v)).toBeInvalid();
@@ -165,11 +176,23 @@ describe("valueDateTime", () => {
 });
 
 describe("valueTime", () => {
-  it.each(["12:03:00"])("accepts %p", async (v) => {
-    expect(await validate("valueTime", v)).toBeValid();
-  });
+  it.each(["00:00:00", "12:03:00", "23:59:59", "13:37:12.132", "12:00:60"])(
+    "accepts %p",
+    async (v) => {
+      expect(await validate("valueTime", v)).toBeValid();
+    },
+  );
 
-  it.each(["23:02", "2015-02-07T13:28:17"])("rejects %p", async (v) => {
+  it.each([
+    "",
+    "23:02",
+    "24:00:00",
+    "12:60:00",
+    "12:00:61",
+    "12:00:00Z",
+    "12:00:00.0000000000",
+    "2015-02-07T13:28:17",
+  ])("rejects %p", async (v) => {
     expect(await validate("valueTime", v)).toBeInvalid();
   });
 
@@ -180,17 +203,49 @@ describe("valueTime", () => {
 });
 
 describe("valueDate", () => {
-  it.each(["2018", "1973-06", "1905-08-23", "2000-01-02"])("accepts %p", async (v) => {
-    expect(await validate("valueDate", v)).toBeValid();
+  it.each(["0001", "2018", "1973-06", "1905-08-23", "2000-01-02", "2024-02-29", "2000-02-29"])(
+    "accepts %p",
+    async (v) => {
+      expect(await validate("valueDate", v)).toBeValid();
+    },
+  );
+
+  it.each([
+    "",
+    "0000",
+    "201",
+    "2000-13",
+    "2000-01-32",
+    "2024-02-31",
+    "2023-02-29",
+    "1900-02-29",
+    "2017-01-01T00:00:00Z",
+  ])("rejects %p", async (v) => {
+    expect(await validate("valueDate", v)).toBeInvalid();
+  });
+
+  it("rejection issue points at Parameters.parameter[0].value.ofType(date)", async () => {
+    const res = await validate("valueDate", "2024-02-31");
+    expect(res).toHaveIssueWithExpression("Parameters.parameter[0].value.ofType(date)");
   });
 });
 
 describe("valueInstant", () => {
-  it.each(["2015-02-07T13:28:17.239+02:00", "2017-01-01T00:00:00Z"])("accepts %p", async (v) => {
+  it.each([
+    "2015-02-07T13:28:17.239+02:00",
+    "2017-01-01T00:00:00Z",
+    "2015-02-07T13:28:17-14:00",
+    "2017-01-01T00:00:00.000000000Z",
+    "2017-01-01T00:00:60Z",
+  ])("accepts %p", async (v) => {
     expect(await validate("valueInstant", v)).toBeValid();
   });
 
   it.each([
+    "",
+    "2017-01-01t00:00:00z",
+    "2017-01-01T00:00:00",
+    "2015-02-07T13:28:17-14:01",
     "2015-02-07T13:28:17.239",
     "2015-02-07T13:28+02:00",
     "201",
