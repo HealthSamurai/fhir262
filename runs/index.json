@@ -1,6 +1,23 @@
 {
   "runs": [
     {
+      "id": "run-2026-05-14-142953",
+      "startedAt": "2026-05-14T14:29:53.683Z",
+      "duration_ms": 263894,
+      "commit": "dcd4a65",
+      "commitMessage": "Add $validate operation-shape tests",
+      "branch": "main",
+      "impls": [
+        "aidbox",
+        "hapi",
+        "medplum",
+        "msfhir"
+      ],
+      "pass": 841,
+      "fail": 123,
+      "skipped": 0
+    },
+    {
       "id": "run-2026-05-14-142616",
       "startedAt": "2026-05-14T14:26:16.305Z",
       "duration_ms": 193462,
