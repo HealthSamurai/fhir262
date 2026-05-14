@@ -130,23 +130,30 @@ button { font: inherit; border: 0; background: transparent; color: inherit; curs
 }
 .meta-row .meta-k { color: var(--fg-dim); }
 .meta-row .meta-v { color: var(--fg-soft); font-weight: 500; }
-.meta-row-2 { color: var(--fg-dim); font-size: 11.5px; }
-.meta-row-2 .meta-k { color: var(--fg-dim); font-weight: 400; }
 .meta-row-btn {
-  border: 0;
-  background: transparent;
-  padding: 4px 8px;
-  margin: -4px -8px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  padding: 5px 10px 5px 12px;
   border-radius: var(--r-sm);
   cursor: pointer;
-  transition: background 0.1s;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
   font: inherit;
   color: inherit;
 }
-.meta-row-btn:hover { background: var(--bg-hover); }
-.meta-row-btn:hover .meta-k { color: var(--fg-soft); }
-.meta-row-chev { color: var(--fg-dim); margin-left: 2px; transition: color 0.1s; }
-.meta-row-btn:hover .meta-row-chev { color: var(--fg-muted); }
+.meta-row-btn:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+.meta-row-btn:hover .meta-k { color: var(--fg); }
+.meta-row-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.meta-row-chev {
+  color: var(--fg-soft);
+  margin-left: 4px;
+  transition: color 0.1s, transform 0.15s;
+}
+.meta-row-btn:hover .meta-row-chev { color: var(--fg); }
+.meta-row-btn-open .meta-row-chev { transform: rotate(180deg); color: var(--fg); }
+.meta-row-btn-open { background: var(--bg-hover); border-color: var(--border-strong); }
 
 /* ─── Run history popover ─────────────────────────────────────────────── */
 .popover-scrim {
@@ -706,6 +713,33 @@ button { font: inherit; border: 0; background: transparent; color: inherit; curs
 }
 .group-folder svg { width: 14px; height: 14px; display: block; }
 
+.cell-describe {
+  display: block;
+  padding: 0;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  border-right: 0;
+  min-height: 28px;
+  /* Grid items need min-width:0 to let their contents shrink below intrinsic
+     size — without this, a long describe forces the row wider than the page. */
+  min-width: 0;
+}
+.cell-describe-inner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 22px 6px 32px;
+  min-height: 28px;
+  color: var(--fg-soft);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  overflow-wrap: anywhere;
+}
+.describe-seg { min-width: 0; }
+.describe-sep { color: var(--fg-muted); font-weight: 400; }
+
 .cell-corner {
   background: var(--bg-sunk);
   border-bottom: 1px solid var(--border-strong);
@@ -760,6 +794,7 @@ button { font: inherit; border: 0; background: transparent; color: inherit; curs
   position: relative;
 }
 .cell-row-name:hover { background: var(--bg-hover); }
+.cell-row-name-nested { padding-left: 44px; }
 .row-name-title {
   font-size: 13.5px;
   font-weight: 500;
@@ -780,7 +815,7 @@ button { font: inherit; border: 0; background: transparent; color: inherit; curs
 .group-name {
   font-size: 12.5px;
   font-weight: 500;
-  color: var(--fg);
+  color: var(--fg-muted);
   letter-spacing: -0.005em;
   white-space: nowrap;
 }

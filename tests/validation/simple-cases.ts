@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from "@jest/globals";
-import type { ServerInstance } from "../../../interfaces/server";
-import { loadImpl } from "../../../framework/impl-loader";
+import type { ServerInstance } from "../../interfaces/server";
+import { loadImpl } from "../../framework/impl-loader";
 
 const server = loadImpl().server;
 let instance: ServerInstance;

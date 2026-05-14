@@ -35,7 +35,8 @@ fhir262/
 ├── Makefile                    # convenience targets (test-stub, ...)
 │
 ├── tests/                      # the canonical suite (the product)
-│   └── <area>/<name>/test.ts   # e.g. tests/validation/validate-patient/test.ts
+│   └── <area>/<name>.ts        # any .ts under tests/ is a test file
+│                               # e.g. tests/validation/simple-cases-test.ts
 │
 ├── impl/                       # FHIR server implementations
 │   ├── stub/index.ts           # returns canned data; no container
@@ -96,7 +97,7 @@ absence of `error`/`fatal` severities, not for an empty `issue` array.
 - Each impl is a single TS file exporting `impl` (a map of interfaces). Layout is free — `-impl` points at the file directly. The impl name shown in reports is the parent directory name when the file is `index.ts`, otherwise the filename minus extension.
 - TS interface names: no `I` prefix.
 - Stub returns canned data — no real HTTP server.
-- Each test file boots a fresh server environment in `beforeAll`. For real impls (e.g. Aidbox) that's ~20s per file, so related assertions for the same feature go in one `test.ts` as additional `it()` blocks rather than in sibling folders.
+- Each test file boots a fresh server environment in `beforeAll`. For real impls (e.g. Aidbox) that's ~20s per file, so related assertions for the same feature go in one file as additional `it()` blocks rather than in sibling files.
 - Impls log lifecycle and request activity through `framework/log.ts` (`createLogger("<impl-name>")`); output goes to stderr so it appears live during a run.
 
 ## House rules
