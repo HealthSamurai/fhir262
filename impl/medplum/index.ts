@@ -115,27 +115,30 @@ const server: Server = {
 
     const authHeader = `Bearer ${accessToken}`;
 
+    const post = async (path: string, params: unknown) => {
+      const reqPath = `/fhir/R4${path}`;
+      const tOp = Date.now();
+      const res = await fetch(`${baseUrl}${reqPath}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/fhir+json",
+          Accept: "application/fhir+json",
+          Authorization: authHeader,
+        },
+        body: params == null ? undefined : JSON.stringify(params),
+      });
+      const text = await res.text();
+      log(`POST ${reqPath} → ${res.status} in ${since(tOp)}`);
+      let body: unknown = text;
+      try {
+        body = text.length > 0 ? JSON.parse(text) : null;
+      } catch {}
+      return { status: res.status, body };
+    };
+
     const rest: Rest = {
-      async operation(resourceType, operation, params) {
-        const reqPath = `/fhir/R4/${resourceType}/${operation}`;
-        const tOp = Date.now();
-        const res = await fetch(`${baseUrl}${reqPath}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/fhir+json",
-            Accept: "application/fhir+json",
-            Authorization: authHeader,
-          },
-          body: params == null ? undefined : JSON.stringify(params),
-        });
-        const text = await res.text();
-        log(`POST ${reqPath} → ${res.status} in ${since(tOp)}`);
-        let body: unknown = text;
-        try {
-          body = text.length > 0 ? JSON.parse(text) : null;
-        } catch {}
-        return { status: res.status, body };
-      },
+      operation: (resourceType, operation, params) => post(`/${resourceType}/${operation}`, params),
+      systemOperation: (operation, params) => post(`/${operation}`, params),
     };
 
     return {

@@ -31,26 +31,29 @@ const server: Server = {
     const baseUrl = `http://${hapi.getHost()}:${hapi.getMappedPort(HAPI_PORT)}`;
     log(`environment ready at ${baseUrl} in ${since(t0)}`);
 
+    const post = async (path: string, params: unknown) => {
+      const reqPath = `/fhir${path}`;
+      const tOp = Date.now();
+      const res = await fetch(`${baseUrl}${reqPath}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/fhir+json",
+          Accept: "application/fhir+json",
+        },
+        body: params == null ? undefined : JSON.stringify(params),
+      });
+      const text = await res.text();
+      log(`POST ${reqPath} → ${res.status} in ${since(tOp)}`);
+      let body: unknown = text;
+      try {
+        body = text.length > 0 ? JSON.parse(text) : null;
+      } catch {}
+      return { status: res.status, body };
+    };
+
     const rest: Rest = {
-      async operation(resourceType, operation, params) {
-        const reqPath = `/fhir/${resourceType}/${operation}`;
-        const tOp = Date.now();
-        const res = await fetch(`${baseUrl}${reqPath}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/fhir+json",
-            Accept: "application/fhir+json",
-          },
-          body: params == null ? undefined : JSON.stringify(params),
-        });
-        const text = await res.text();
-        log(`POST ${reqPath} → ${res.status} in ${since(tOp)}`);
-        let body: unknown = text;
-        try {
-          body = text.length > 0 ? JSON.parse(text) : null;
-        } catch {}
-        return { status: res.status, body };
-      },
+      operation: (resourceType, operation, params) => post(`/${resourceType}/${operation}`, params),
+      systemOperation: (operation, params) => post(`/${operation}`, params),
     };
 
     return {

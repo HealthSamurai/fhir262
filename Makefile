@@ -1,4 +1,4 @@
-.PHONY: fresh clean test-all test-aidbox test-hapi test-medplum test-msfhir ui-dist ui-serve clean-dist format format-check
+.PHONY: fresh clean test-all test-all-tmux test-aidbox test-hapi test-medplum test-msfhir ui-dist ui-serve clean-dist format format-check
 
 
 clean:
@@ -14,6 +14,22 @@ DIST    := dist
 
 test-all:
 	$(MAKE) -j4 -k test-aidbox test-hapi test-medplum test-msfhir
+
+TMUX_SESSION := fhir262-tests
+
+# Same impls as test-all, but each run gets its own tmux pane so output
+# streams live side-by-side. Panes close as their run finishes; the session
+# auto-closes when the last pane exits.
+test-all-tmux:
+	@command -v tmux >/dev/null || { echo "tmux is required for test-all-tmux"; exit 1; }
+	@mkdir -p $(RESULTS)
+	@tmux kill-session -t $(TMUX_SESSION) 2>/dev/null || true
+	@tmux new-session -d -s $(TMUX_SESSION) "$(MAKE) test-aidbox"
+	@tmux split-window -t $(TMUX_SESSION) "$(MAKE) test-hapi"
+	@tmux split-window -t $(TMUX_SESSION) "$(MAKE) test-medplum"
+	@tmux split-window -t $(TMUX_SESSION) "$(MAKE) test-msfhir"
+	@tmux select-layout -t $(TMUX_SESSION) tiled
+	@tmux attach -t $(TMUX_SESSION)
 
 test-aidbox:
 	@mkdir -p $(RESULTS)
