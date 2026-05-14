@@ -1,6 +1,23 @@
 {
   "runs": [
     {
+      "id": "run-2026-05-14-154951",
+      "startedAt": "2026-05-14T15:49:51.894Z",
+      "duration_ms": 525709,
+      "commit": "b72aa22",
+      "commitMessage": "Add CRUD ops to Rest interface + test-path/name filters",
+      "branch": "main",
+      "impls": [
+        "aidbox",
+        "hapi",
+        "medplum",
+        "msfhir"
+      ],
+      "pass": 1000,
+      "fail": 176,
+      "skipped": 0
+    },
+    {
       "id": "run-2026-05-14-153708",
       "startedAt": "2026-05-14T15:37:08.962Z",
       "duration_ms": 422510,
