@@ -1,4 +1,4 @@
-.PHONY: fresh clean test-all test-aidbox test-hapi test-medplum test-msfhir ui-dist ui-serve clean-dist
+.PHONY: fresh clean test-all test-aidbox test-hapi test-medplum test-msfhir ui-dist ui-serve clean-dist format format-check
 
 
 clean:
@@ -40,3 +40,9 @@ ui-serve: ui-dist
 
 clean-dist:
 	rm -rf $(DIST)
+
+format:
+	bunx biome format --write .
+
+format-check:
+	bunx biome format .

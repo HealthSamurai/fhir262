@@ -58,7 +58,9 @@ const server: Server = {
       });
 
     const tFhir = Date.now();
-    const fhirPromise = new GenericContainer("mcr.microsoft.com/healthcareapis/r4-fhir-server:latest")
+    const fhirPromise = new GenericContainer(
+      "mcr.microsoft.com/healthcareapis/r4-fhir-server:latest",
+    )
       .withNetwork(network)
       .withExposedPorts(MSFHIR_PORT)
       .withEnvironment({

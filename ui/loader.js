@@ -38,7 +38,7 @@
           "  make ui-dist\n" +
           "then serve dist/ (e.g. `python3 -m http.server -d dist 8000`).\n\n" +
           "Underlying error: " +
-          e.message
+          e.message,
       );
       throw e;
     }
@@ -50,8 +50,7 @@
     }
 
     const requestedId = qs.get("run");
-    const selected =
-      (requestedId && runs.find((r) => r.id === requestedId)) || runs[0];
+    const selected = (requestedId && runs.find((r) => r.id === requestedId)) || runs[0];
 
     let run;
     try {

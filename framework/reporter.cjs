@@ -1,10 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
-const {
-  getStackTraceLines,
-  getTopFrame,
-  separateMessageFromStack,
-} = require("jest-message-util");
+const { getStackTraceLines, getTopFrame, separateMessageFromStack } = require("jest-message-util");
 
 const ANSI_RE = /\x1b\[[0-9;]*m/g;
 const stripAnsi = (s) => (s ?? "").replace(ANSI_RE, "");
@@ -44,8 +40,7 @@ function parseFailure(failureDetail, failureMessages, rootDir) {
 
   const msgLines = stripAnsi(matcherMessage).replace(/\r\n/g, "\n").split("\n");
   const firstNonEmpty = msgLines.find((l) => l.trim());
-  const assertionLine =
-    msgLines.find((l) => l.trim().startsWith("expect(")) || firstNonEmpty || "";
+  const assertionLine = msgLines.find((l) => l.trim().startsWith("expect(")) || firstNonEmpty || "";
   const expectedLine = msgLines.find((l) => l.startsWith("Expected:"));
   // Received: may span multiple lines (matchers like toHaveIssueWithExpression
   // pretty-print a JSON body below the prefix), so we collect from the prefix
@@ -54,10 +49,7 @@ function parseFailure(failureDetail, failureMessages, rootDir) {
   const receivedBlock =
     receivedIdx === -1
       ? ""
-      : [
-          msgLines[receivedIdx].slice("Received:".length),
-          ...msgLines.slice(receivedIdx + 1),
-        ]
+      : [msgLines[receivedIdx].slice("Received:".length), ...msgLines.slice(receivedIdx + 1)]
           .join("\n")
           .trim();
 
@@ -103,7 +95,7 @@ class Fhir262Reporter {
       result.error = parseFailure(
         tc.failureDetails && tc.failureDetails[0],
         tc.failureMessages,
-        this.rootDir
+        this.rootDir,
       );
     }
     this.results.push(result);

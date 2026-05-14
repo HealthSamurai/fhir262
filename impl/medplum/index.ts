@@ -90,9 +90,7 @@ const server: Server = {
       .withNetwork(network)
       .withExposedPorts(MEDPLUM_PORT)
       .withCommand(["file:/srv/config.json"])
-      .withCopyFilesToContainer([
-        { source: CONFIG_PATH, target: "/srv/config.json" },
-      ])
+      .withCopyFilesToContainer([{ source: CONFIG_PATH, target: "/srv/config.json" }])
       .withWaitStrategy(Wait.forHttp("/healthcheck", MEDPLUM_PORT).withStartupTimeout(180_000))
       .withStartupTimeout(180_000)
       .start()
@@ -101,7 +99,11 @@ const server: Server = {
         return c;
       });
 
-    const [postgres, redis, medplum] = await Promise.all([postgresPromise, redisPromise, medplumPromise]);
+    const [postgres, redis, medplum] = await Promise.all([
+      postgresPromise,
+      redisPromise,
+      medplumPromise,
+    ]);
 
     const baseUrl = `http://${medplum.getHost()}:${medplum.getMappedPort(MEDPLUM_PORT)}`;
     log(`environment ready at ${baseUrl} in ${since(t0)}`);

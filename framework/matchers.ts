@@ -42,12 +42,7 @@ expect.extend({
     return {
       pass,
       message: () => {
-        const hint = this.utils.matcherHint(
-          "toBeValid",
-          "received",
-          "",
-          { isNot: this.isNot }
-        );
+        const hint = this.utils.matcherHint("toBeValid", "received", "", { isNot: this.isNot });
         return [
           hint,
           "",
@@ -65,12 +60,7 @@ expect.extend({
     return {
       pass,
       message: () => {
-        const hint = this.utils.matcherHint(
-          "toBeInvalid",
-          "received",
-          "",
-          { isNot: this.isNot }
-        );
+        const hint = this.utils.matcherHint("toBeInvalid", "received", "", { isNot: this.isNot });
         return [
           hint,
           "",
@@ -88,12 +78,9 @@ expect.extend({
     return {
       pass,
       message: () => {
-        const hint = this.utils.matcherHint(
-          "toHaveIssueWithExpression",
-          "received",
-          "expression",
-          { isNot: this.isNot }
-        );
+        const hint = this.utils.matcherHint("toHaveIssueWithExpression", "received", "expression", {
+          isNot: this.isNot,
+        });
         return [
           hint,
           "",

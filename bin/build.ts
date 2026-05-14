@@ -33,19 +33,17 @@ const runsDir = path.join(distDir, "runs");
 
 function sh(cmd: string, fallback = ""): string {
   try {
-    return execSync(cmd, { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+    return execSync(cmd, { stdio: ["ignore", "pipe", "ignore"] })
+      .toString()
+      .trim();
   } catch {
     return fallback;
   }
 }
 
 function gitMeta() {
-  const commit =
-    process.env.GITHUB_SHA?.slice(0, 7) ||
-    sh("git rev-parse --short HEAD", "unknown");
-  const branch =
-    process.env.GITHUB_REF_NAME ||
-    sh("git rev-parse --abbrev-ref HEAD", "unknown");
+  const commit = process.env.GITHUB_SHA?.slice(0, 7) || sh("git rev-parse --short HEAD", "unknown");
+  const branch = process.env.GITHUB_REF_NAME || sh("git rev-parse --abbrev-ref HEAD", "unknown");
   const commitMessage = sh(`git log -1 --pretty=%s`, "");
 
   let repoUrl = process.env.FHIR262_REPO_URL || "";
@@ -54,9 +52,7 @@ function gitMeta() {
     if (origin) {
       // git@github.com:foo/bar.git → https://github.com/foo/bar
       // https://github.com/foo/bar.git → https://github.com/foo/bar
-      repoUrl = origin
-        .replace(/^git@([^:]+):/, "https://$1/")
-        .replace(/\.git$/, "");
+      repoUrl = origin.replace(/^git@([^:]+):/, "https://$1/").replace(/\.git$/, "");
     }
   }
   return { commit, branch, commitMessage, repoUrl };
@@ -64,9 +60,7 @@ function gitMeta() {
 
 function suiteVersion(): string {
   try {
-    const pkg = JSON.parse(
-      fs.readFileSync(path.join(repoRoot, "package.json"), "utf8")
-    );
+    const pkg = JSON.parse(fs.readFileSync(path.join(repoRoot, "package.json"), "utf8"));
     return pkg.version || "0.0.0";
   } catch {
     return "0.0.0";
@@ -138,7 +132,7 @@ function rebuildIndex(): IndexEntry[] {
   entries.sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1));
   fs.writeFileSync(
     path.join(runsDir, "index.json"),
-    JSON.stringify({ runs: entries }, null, 2) + "\n"
+    JSON.stringify({ runs: entries }, null, 2) + "\n",
   );
   return entries;
 }
@@ -150,7 +144,7 @@ function main() {
   const reports = readImplReports(resultsDir);
   if (reports.length === 0) {
     console.warn(
-      `build: no .json reports under ${path.relative(process.cwd(), resultsDir)} — skipping merge`
+      `build: no .json reports under ${path.relative(process.cwd(), resultsDir)} — skipping merge`,
     );
   } else {
     const meta = gitMeta();
@@ -161,7 +155,7 @@ function main() {
     const outFile = path.join(runsDir, `${run.meta.id}.json`);
     fs.writeFileSync(outFile, JSON.stringify(run, null, 2) + "\n");
     console.log(
-      `build: merged ${reports.length} impl report(s) → ${path.relative(process.cwd(), outFile)}`
+      `build: merged ${reports.length} impl report(s) → ${path.relative(process.cwd(), outFile)}`,
     );
   }
 
@@ -169,8 +163,8 @@ function main() {
   console.log(
     `build: ${entries.length} run(s) indexed → ${path.relative(
       process.cwd(),
-      path.join(runsDir, "index.json")
-    )}`
+      path.join(runsDir, "index.json"),
+    )}`,
   );
   console.log(`build: dist ready at ${path.relative(process.cwd(), distDir)}`);
 }

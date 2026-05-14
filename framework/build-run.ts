@@ -126,8 +126,8 @@ function buildStatuses(reports: ImplReport[]): Statuses {
     for (const result of r.results) {
       const modId = moduleIdFromFile(result.file);
       const key = testKey(result.file, result.id);
-      (out[modId] ??= {});
-      (out[modId][key] ??= {});
+      out[modId] ??= {};
+      out[modId][key] ??= {};
       const cell: Cell = { status: result.status, duration_ms: result.duration_ms };
       if (result.error) cell.error = result.error;
       out[modId][key][r.impl] = cell;
@@ -158,7 +158,7 @@ function wallClockMs(reports: ImplReport[]): number {
 
 export function mergeReports(
   reports: ImplReport[],
-  meta: Omit<RunMeta, "id" | "startedAt" | "duration_ms">
+  meta: Omit<RunMeta, "id" | "startedAt" | "duration_ms">,
 ): { run: Run; index: IndexEntry } {
   const startedAt = reports.map((r) => r.startedAt).sort()[0];
   const duration_ms = wallClockMs(reports);
