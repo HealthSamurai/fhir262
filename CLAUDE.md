@@ -13,10 +13,9 @@ suite, multiple implementations, comparison output.
 ## Run
 
 ```
-make test-stub                                                # run the suite against the stub impl
 make test-aidbox                                              # run against Aidbox (Docker, needs AIDBOX_LICENSE)
-bun bin/run.ts -impl impl/stub/index.ts                       # equivalent of test-stub
-bun bin/run.ts -impl impl/stub/index.ts -out report.json      # also write a JSON report
+bun bin/run.ts -impl impl/aidbox/index.ts                     # equivalent of test-aidbox
+bun bin/run.ts -impl impl/aidbox/index.ts -out report.json    # also write a JSON report
 ```
 
 `-out` is optional. Without it, jest's console output is the only result;
@@ -32,15 +31,17 @@ postgres + aidboxone pair per test file via testcontainers.
 fhir262/
 ├── bin/run.ts                  # CLI entry (Bun): parses flags, spawns jest with env
 ├── jest.config.cjs             # jest + ts-jest config; uses custom reporter
-├── Makefile                    # convenience targets (test-stub, ...)
+├── Makefile                    # convenience targets (test-aidbox, ...)
 │
 ├── tests/                      # the canonical suite (the product)
 │   └── <area>/<name>.ts        # any .ts under tests/ is a test file
 │                               # e.g. tests/validation/simple-cases-test.ts
 │
 ├── impl/                       # FHIR server implementations
-│   ├── stub/index.ts           # returns canned data; no container
-│   └── aidbox/index.ts         # postgres + aidboxone via testcontainers
+│   ├── aidbox/index.ts         # postgres + aidboxone via testcontainers
+│   ├── hapi/index.ts           # HAPI FHIR server via testcontainers
+│   ├── medplum/index.ts        # Medplum via testcontainers
+│   └── msfhir/index.ts         # Microsoft FHIR Server via testcontainers
 │
 ├── interfaces/                 # pure FHIR-shaped contracts — no implementation code
 │   ├── server.ts               # Server, ServerInstance
@@ -96,8 +97,7 @@ absence of `error`/`fatal` severities, not for an empty `issue` array.
 
 - Each impl is a single TS file exporting `impl` (a map of interfaces). Layout is free — `-impl` points at the file directly. The impl name shown in reports is the parent directory name when the file is `index.ts`, otherwise the filename minus extension.
 - TS interface names: no `I` prefix.
-- Stub returns canned data — no real HTTP server.
-- Each test file boots a fresh server environment in `beforeAll`. For real impls (e.g. Aidbox) that's ~20s per file, so related assertions for the same feature go in one file as additional `it()` blocks rather than in sibling files.
+- Each test file boots a fresh server environment in `beforeAll`. That's ~20s per file for real impls (e.g. Aidbox), so related assertions for the same feature go in one file as additional `it()` blocks rather than in sibling files.
 - Impls log lifecycle and request activity through `framework/log.ts` (`createLogger("<impl-name>")`); output goes to stderr so it appears live during a run.
 
 ## House rules
