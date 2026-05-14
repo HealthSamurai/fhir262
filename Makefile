@@ -1,4 +1,4 @@
-.PHONY: fresh clean test-all test-aidbox test-medplum test-msfhir ui-dist ui-serve clean-dist
+.PHONY: fresh clean test-all test-aidbox test-hapi test-medplum test-msfhir ui-dist ui-serve clean-dist
 
 
 clean:
@@ -13,11 +13,15 @@ RESULTS := .results
 DIST    := dist
 
 test-all:
-	$(MAKE) -j3 -k test-aidbox test-medplum test-msfhir
+	$(MAKE) -j4 -k test-aidbox test-hapi test-medplum test-msfhir
 
 test-aidbox:
 	@mkdir -p $(RESULTS)
 	bun bin/run.ts -impl impl/aidbox/index.ts -out $(RESULTS)/aidbox.json
+
+test-hapi:
+	@mkdir -p $(RESULTS)
+	bun bin/run.ts -impl impl/hapi/index.ts -out $(RESULTS)/hapi.json
 
 test-medplum:
 	@mkdir -p $(RESULTS)
