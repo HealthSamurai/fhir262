@@ -1,6 +1,23 @@
 {
   "runs": [
     {
+      "id": "run-2026-05-14-142616",
+      "startedAt": "2026-05-14T14:26:16.305Z",
+      "duration_ms": 193462,
+      "commit": "2090b0e",
+      "commitMessage": "Extend primitive validation coverage",
+      "branch": "main",
+      "impls": [
+        "aidbox",
+        "hapi",
+        "medplum",
+        "msfhir"
+      ],
+      "pass": 819,
+      "fail": 113,
+      "skipped": 0
+    },
+    {
       "id": "run-2026-05-14-135909",
       "startedAt": "2026-05-14T13:59:09.109Z",
       "duration_ms": 189261,
