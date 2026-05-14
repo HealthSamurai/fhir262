@@ -13,38 +13,54 @@ afterAll(async () => {
   await instance.stop();
 });
 
-describe("simple validation", () => {
-  it("validates a minimal Patient with no errors", async () => {
+describe("minimal resource (Patient)", () => {
+  it("is valid", async () => {
     const res = await instance.rest.operation("Patient", "$validate", {
       resourceType: "Patient",
       id: "example",
     });
     expect(res).toBeValid();
   });
+});
 
-  it("reports an error when Patient.name has the wrong type", async () => {
-    const res = await instance.rest.operation("Patient", "$validate", {
+describe("primitive value at a complex element (Patient.name)", () => {
+  let res: { status: number; body: unknown };
+  beforeAll(async () => {
+    res = await instance.rest.operation("Patient", "$validate", {
       resourceType: "Patient",
       name: "John",
     });
+  });
+  it("is invalid", () => {
     expect(res).toBeInvalid();
+  });
+  it("issue points at Patient.name", () => {
     expect(res).toHaveIssueWithExpression("Patient.name");
   });
+});
 
-  it("accepts a Patient with a valid gender code", async () => {
+describe("valid code at a bound element (Patient.gender)", () => {
+  it("is valid", async () => {
     const res = await instance.rest.operation("Patient", "$validate", {
       resourceType: "Patient",
       gender: "male",
     });
     expect(res).toBeValid();
   });
+});
 
-  it("reports an error for a Patient with an invalid gender code", async () => {
-    const res = await instance.rest.operation("Patient", "$validate", {
+describe("invalid code at a bound element (Patient.gender)", () => {
+  let res: { status: number; body: unknown };
+  beforeAll(async () => {
+    res = await instance.rest.operation("Patient", "$validate", {
       resourceType: "Patient",
       gender: "mmale",
     });
+  });
+  it("is invalid", () => {
     expect(res).toBeInvalid();
+  });
+  it("issue points at Patient.gender", () => {
     expect(res).toHaveIssueWithExpression("Patient.gender");
   });
 });
