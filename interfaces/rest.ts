@@ -24,4 +24,7 @@ export interface Rest {
 
   // Instance delete: DELETE /[type]/[id]
   delete(resourceType: string, id: string): Promise<{ status: number; body: unknown }>;
+
+  // Type-level search: GET /[type]?[query]
+  search(resourceType: string, query?: string): Promise<{ status: number; body: unknown }>;
 }

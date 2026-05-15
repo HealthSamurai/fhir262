@@ -145,6 +145,8 @@ const server: Server = {
       update: (resourceType, id, resource) =>
         request("PUT", `/${resourceType}/${id}`, resource),
       delete: (resourceType, id) => request("DELETE", `/${resourceType}/${id}`),
+      search: (resourceType, query) =>
+        request("GET", `/${resourceType}${query ? `?${query}` : ""}`),
     };
 
     return {

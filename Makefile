@@ -23,7 +23,7 @@ RESULTS := .results
 DIST    := dist
 
 test-all:
-	$(MAKE) -j4 -k test-aidbox test-hapi test-medplum test-msfhir
+	FHIR262_CI=1 $(MAKE) -j2 -k test-aidbox test-hapi test-medplum test-msfhir
 
 TMUX_SESSION := fhir262-tests
 

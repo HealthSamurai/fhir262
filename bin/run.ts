@@ -29,6 +29,7 @@ const filter = arg("-filter") ?? process.env.FILTER;
 const name = arg("-name") ?? process.env.NAME;
 
 const jestArgs = ["jest", "--config=jest.config.cjs"];
+if (process.env.FHIR262_CI) jestArgs.push("--ci");
 if (name) jestArgs.push("-t", name);
 if (filter) jestArgs.push(filter);
 
