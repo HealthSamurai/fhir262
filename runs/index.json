@@ -1,6 +1,23 @@
 {
   "runs": [
     {
+      "id": "run-2026-05-15-133940",
+      "startedAt": "2026-05-15T13:39:40.339Z",
+      "duration_ms": 684919,
+      "commit": "6484ca6",
+      "commitMessage": "add search test",
+      "branch": "main",
+      "impls": [
+        "aidbox",
+        "hapi",
+        "medplum",
+        "msfhir"
+      ],
+      "pass": 1048,
+      "fail": 176,
+      "skipped": 0
+    },
+    {
       "id": "run-2026-05-15-112219",
       "startedAt": "2026-05-15T11:22:19.185Z",
       "duration_ms": 504508,
