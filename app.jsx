@@ -513,9 +513,11 @@ function Matrix({ module: mod, impls, visibleImpls, filters, query }) {
     return segs.length > 1 ? segs.slice(0, -1) : null;
   }, []);
 
-  // Filter tests
+  // Filter tests, then sort alphabetically within each (file, describe) group.
+  // Titles starting with non-alphanumeric chars (e.g. FHIR ops like "$validate")
+  // sort after normal-named tests within the same group.
   const filteredTests = useMemo(() => {
-    return mod.tests.filter(test => {
+    const filtered = mod.tests.filter(test => {
       if (query) {
         const q = query.toLowerCase();
         const inTitle = test.title.toLowerCase().includes(q);
@@ -530,7 +532,20 @@ function Matrix({ module: mod, impls, visibleImpls, filters, query }) {
       }
       return true;
     });
-  }, [mod, visibleImpls, filters, query, groupForTest]);
+    // Sort files alphabetically, with `$`-prefixed (and other non-alphanumeric)
+    // basenames last. Tests within a file keep their source/describe order —
+    // Array.sort is stable, so equal file keys preserve input order.
+    const isSpecial = (s) => !!s && !/^[\p{L}\p{N}]/u.test(s);
+    return filtered.sort((a, b) => {
+      // Use the displayed group key (path within module) so a basename like
+      // `$validation-op.ts` is recognized as special — `test.file` includes
+      // the leading `tests/<module>/` segments that mask the prefix.
+      const ga = groupForTest(a), gb = groupForTest(b);
+      const sa = isSpecial(ga), sb = isSpecial(gb);
+      if (sa !== sb) return sa ? 1 : -1;
+      return ga.localeCompare(gb);
+    });
+  }, [mod, visibleImpls, filters, query, groupForTest, describePathOf]);
 
   // Build either a sorted flat list (when sortByImpl) or a grouped list.
   const renderItems = useMemo(() => {
@@ -585,6 +600,61 @@ function Matrix({ module: mod, impls, visibleImpls, filters, query }) {
     setSortByImpl(prev => prev === implId ? null : implId);
   };
 
+  // Keep the sticky column-header strip's horizontal scroll in lockstep
+  // with the body's. The header strip lives outside .matrix so it can
+  // resolve sticky-top against the viewport instead of getting trapped
+  // by .matrix's scroll container.
+  const matrixRef = useRef(null);
+  const headerRef = useRef(null);
+  useEffect(() => {
+    const m = matrixRef.current;
+    const h = headerRef.current;
+    if (!m || !h) return;
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => { h.scrollLeft = m.scrollLeft; raf = 0; });
+    };
+    m.addEventListener("scroll", onScroll, { passive: true });
+    return () => { m.removeEventListener("scroll", onScroll); if (raf) cancelAnimationFrame(raf); };
+  }, [visibleImpls.length]);
+
+  const headerCells = (
+    <>
+      <div className="cell cell-corner" />
+      {visibleImpls.map(impl => {
+        const agg = aggregateModule(mod.id, impls)[impl.id];
+        const passPct = pct(agg.pass, agg.total);
+        const isSorted = sortByImpl === impl.id;
+        return (
+          <button
+            key={impl.id}
+            className={`cell cell-head cell-head-btn ${isSorted ? "cell-head-sorted" : ""}`}
+            onClick={() => onImplHeaderClick(impl.id)}
+            title={isSorted ? "Click to reset order" : `Sort tests by ${impl.label} fails`}
+          >
+            <div className="head-name">
+              {impl.label}
+              <span className="head-sort-icon" aria-hidden="true">
+                {isSorted ? (
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 10l5-5 5 5M7 14l5 5 5-5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                )}
+              </span>
+            </div>
+            <div className="head-pct mono">{passPct}% pass</div>
+            <div className="head-bar">
+              <span style={{ width: `${passPct}%` }} className="bar-seg bar-pass" />
+              <span style={{ width: `${pct(agg.fail, agg.total)}%` }} className="bar-seg bar-fail" />
+              <span style={{ width: `${pct(agg.skipped, agg.total)}%` }} className="bar-seg bar-skip" />
+            </div>
+          </button>
+        );
+      })}
+    </>
+  );
+
   return (
     <div className="matrix-wrap">
       <div className="matrix-head">
@@ -604,40 +674,13 @@ function Matrix({ module: mod, impls, visibleImpls, filters, query }) {
           </div>
         </div>
       </div>
-      <div className="matrix">
+      <div className="matrix-header" ref={headerRef}>
         <div className="matrix-grid" style={{ "--cols": visibleImpls.length }}>
-          {/* Header row */}
-          <div className="cell cell-corner" />
-          {visibleImpls.map(impl => {
-            const agg = aggregateModule(mod.id, impls)[impl.id];
-            const passPct = pct(agg.pass, agg.total);
-            const isSorted = sortByImpl === impl.id;
-            return (
-              <button
-                key={impl.id}
-                className={`cell cell-head cell-head-btn ${isSorted ? "cell-head-sorted" : ""}`}
-                onClick={() => onImplHeaderClick(impl.id)}
-                title={isSorted ? "Click to reset order" : `Sort tests by ${impl.label} fails`}
-              >
-                <div className="head-name">
-                  {impl.label}
-                  <span className="head-sort-icon" aria-hidden="true">
-                    {isSorted ? (
-                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    ) : (
-                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 10l5-5 5 5M7 14l5 5 5-5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    )}
-                  </span>
-                </div>
-                <div className="head-pct mono">{passPct}% pass</div>
-                <div className="head-bar">
-                  <span style={{ width: `${passPct}%` }} className="bar-seg bar-pass" />
-                  <span style={{ width: `${pct(agg.fail, agg.total)}%` }} className="bar-seg bar-fail" />
-                  <span style={{ width: `${pct(agg.skipped, agg.total)}%` }} className="bar-seg bar-skip" />
-                </div>
-              </button>
-            );
-          })}
+          {headerCells}
+        </div>
+      </div>
+      <div className="matrix" ref={matrixRef}>
+        <div className="matrix-grid" style={{ "--cols": visibleImpls.length }}>
           {/* Test rows */}
           {filteredTests.length === 0 && (
             <div className="cell cell-empty" style={{ gridColumn: `1 / span ${visibleImpls.length + 1}` }}>
@@ -797,7 +840,21 @@ function Toolbar({ query, setQuery, filters, setFilters, hiddenCount, onShowAll 
 // ──────────────────────────────────────────────────────────────────────────
 function App() {
   const impls = window.IMPLS;
-  const modules = window.MODULES;
+  // Priority order for module list: Validation, CRUD, Search first (in that
+  // order), everything else alphabetical by label. Match by lowercased label
+  // so casing in the data doesn't matter.
+  const modules = useMemo(() => {
+    const PRIORITY = ["validation", "crud", "search"];
+    const rank = (m) => {
+      const i = PRIORITY.indexOf((m.label || m.id).toLowerCase());
+      return i === -1 ? PRIORITY.length : i;
+    };
+    return [...window.MODULES].sort((a, b) => {
+      const ra = rank(a), rb = rank(b);
+      if (ra !== rb) return ra - rb;
+      return (a.label || a.id).localeCompare(b.label || b.id);
+    });
+  }, []);
   const [selectedId, setSelectedId] = useState(modules[0].id);
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState({ failingOnly: false });
