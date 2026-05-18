@@ -23,6 +23,10 @@ const server: Server = {
         "hapi.fhir.fhir_version": "R4",
         "hapi.fhir.bulk_export_enabled": "true",
         "hapi.fhir.binary_storage_enabled": "true",
+        // Search modifier opt-ins (HAPI disables these by default for perf).
+        "hapi.fhir.enable_index_of_type": "true",
+        "hapi.fhir.allow_contains_searches": "true",
+        "hapi.fhir.enable_index_missing_fields": "true",
       })
       .withWaitStrategy(Wait.forHttp("/fhir/metadata", HAPI_PORT).withStartupTimeout(240_000))
       .withStartupTimeout(240_000)

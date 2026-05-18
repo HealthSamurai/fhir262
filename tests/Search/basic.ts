@@ -446,3 +446,297 @@ describe("joins-and-or", () => {
     expect(ids).not.toContain(pC);
   });
 });
+
+describe("modifiers", () => {
+  describe("exact (string)", () => {
+    let pS: string;
+    let pSn: string;
+    let psm: string;
+
+    beforeAll(async () => {
+      pS = await createOrFail("Patient", {
+        resourceType: "Patient",
+        identifier: [{ system: IDENT_SYSTEM, value: "EX-1" }],
+        name: [{ family: "Smith" }],
+      });
+      pSn = await createOrFail("Patient", {
+        resourceType: "Patient",
+        identifier: [{ system: IDENT_SYSTEM, value: "EX-2" }],
+        name: [{ family: "Smithson" }],
+      });
+      psm = await createOrFail("Patient", {
+        resourceType: "Patient",
+        identifier: [{ system: IDENT_SYSTEM, value: "EX-3" }],
+        name: [{ family: "smith" }],
+      });
+    });
+
+    afterAll(async () => {
+      await cleanup("Patient", [pS, pSn, psm]);
+    });
+
+    it("family:exact=Smith requires full-string and matching case", async () => {
+      const res = await instance.rest.search("Patient", "family:exact=Smith");
+      expect(res).toHaveStatus(200);
+      const ids = idsOf(res.body);
+      expect(ids).toContain(pS);
+      expect(ids).not.toContain(pSn);
+      expect(ids).not.toContain(psm);
+    });
+
+    it("family:exact=smith matches only the lowercase-stored value", async () => {
+      const res = await instance.rest.search("Patient", "family:exact=smith");
+      expect(res).toHaveStatus(200);
+      const ids = idsOf(res.body);
+      expect(ids).toContain(psm);
+      expect(ids).not.toContain(pS);
+      expect(ids).not.toContain(pSn);
+    });
+  });
+
+  describe("contains (string, uri)", () => {
+    let pAnd: string;
+    let pSon: string;
+    let pSam: string;
+    let pBr: string;
+    let vsAcme: string;
+    let vsEx: string;
+
+    beforeAll(async () => {
+      pAnd = await createOrFail("Patient", {
+        resourceType: "Patient",
+        identifier: [{ system: IDENT_SYSTEM, value: "CT-1" }],
+        name: [{ family: "Anderson" }],
+      });
+      pSon = await createOrFail("Patient", {
+        resourceType: "Patient",
+        identifier: [{ system: IDENT_SYSTEM, value: "CT-2" }],
+        name: [{ family: "Sonder" }],
+      });
+      pSam = await createOrFail("Patient", {
+        resourceType: "Patient",
+        identifier: [{ system: IDENT_SYSTEM, value: "CT-3" }],
+        name: [{ family: "Samsonite" }],
+      });
+      pBr = await createOrFail("Patient", {
+        resourceType: "Patient",
+        identifier: [{ system: IDENT_SYSTEM, value: "CT-4" }],
+        name: [{ family: "Brown" }],
+      });
+      vsAcme = await createOrFail("ValueSet", {
+        resourceType: "ValueSet",
+        url: "http://acme.org/fhir/ValueSet/foo",
+        status: "active",
+      });
+      vsEx = await createOrFail("ValueSet", {
+        resourceType: "ValueSet",
+        url: "http://example.org/fhir/ValueSet/bar",
+        status: "active",
+      });
+    });
+
+    afterAll(async () => {
+      await cleanup("Patient", [pAnd, pSon, pSam, pBr]);
+      await cleanup("ValueSet", [vsAcme, vsEx]);
+    });
+
+    it("family:contains=son matches substring anywhere (Anderson, Sonder, Samsonite)", async () => {
+      const res = await instance.rest.search("Patient", "family:contains=son");
+      expect(res).toHaveStatus(200);
+      const ids = idsOf(res.body);
+      expect(ids).toEqual(expect.arrayContaining([pAnd, pSon, pSam]));
+      expect(ids).not.toContain(pBr);
+    });
+
+    it("family:contains=SON is case-insensitive", async () => {
+      const res = await instance.rest.search("Patient", "family:contains=SON");
+      expect(res).toHaveStatus(200);
+      const ids = idsOf(res.body);
+      expect(ids).toEqual(expect.arrayContaining([pAnd, pSon, pSam]));
+      expect(ids).not.toContain(pBr);
+    });
+
+    it("url:contains=acme matches a URI substring on ValueSet", async () => {
+      const res = await instance.rest.search("ValueSet", "url:contains=acme");
+      expect(res).toHaveStatus(200);
+      const ids = idsOf(res.body);
+      expect(ids).toContain(vsAcme);
+      expect(ids).not.toContain(vsEx);
+    });
+  });
+
+  describe("missing (date, string, token)", () => {
+    let pFull: string;
+    let pEmpty: string;
+
+    beforeAll(async () => {
+      pFull = await createOrFail("Patient", {
+        resourceType: "Patient",
+        identifier: [{ system: IDENT_SYSTEM, value: "MI-1" }],
+        gender: "male",
+        birthDate: "1980-01-01",
+      });
+      pEmpty = await createOrFail("Patient", {
+        resourceType: "Patient",
+        identifier: [{ system: IDENT_SYSTEM, value: "MI-2" }],
+      });
+    });
+
+    afterAll(async () => {
+      await cleanup("Patient", [pFull, pEmpty]);
+    });
+
+    it("gender:missing=true matches records without gender", async () => {
+      const res = await instance.rest.search("Patient", "gender:missing=true");
+      expect(res).toHaveStatus(200);
+      const ids = idsOf(res.body);
+      expect(ids).toContain(pEmpty);
+      expect(ids).not.toContain(pFull);
+    });
+
+    it("gender:missing=false matches records with gender", async () => {
+      const res = await instance.rest.search("Patient", "gender:missing=false");
+      expect(res).toHaveStatus(200);
+      const ids = idsOf(res.body);
+      expect(ids).toContain(pFull);
+      expect(ids).not.toContain(pEmpty);
+    });
+
+    it("birthdate:missing=true matches records without birthDate", async () => {
+      const res = await instance.rest.search("Patient", "birthdate:missing=true");
+      expect(res).toHaveStatus(200);
+      const ids = idsOf(res.body);
+      expect(ids).toContain(pEmpty);
+      expect(ids).not.toContain(pFull);
+    });
+
+    it("birthdate:missing=false matches records with birthDate", async () => {
+      const res = await instance.rest.search("Patient", "birthdate:missing=false");
+      expect(res).toHaveStatus(200);
+      const ids = idsOf(res.body);
+      expect(ids).toContain(pFull);
+      expect(ids).not.toContain(pEmpty);
+    });
+  });
+
+  describe("not (token)", () => {
+    let pMale: string;
+    let pFem: string;
+    let pOth: string;
+    let pNone: string;
+
+    beforeAll(async () => {
+      pMale = await createOrFail("Patient", {
+        resourceType: "Patient",
+        identifier: [{ system: IDENT_SYSTEM, value: "NT-1" }],
+        gender: "male",
+      });
+      pFem = await createOrFail("Patient", {
+        resourceType: "Patient",
+        identifier: [{ system: IDENT_SYSTEM, value: "NT-2" }],
+        gender: "female",
+      });
+      pOth = await createOrFail("Patient", {
+        resourceType: "Patient",
+        identifier: [{ system: IDENT_SYSTEM, value: "NT-3" }],
+        gender: "other",
+      });
+      pNone = await createOrFail("Patient", {
+        resourceType: "Patient",
+        identifier: [{ system: IDENT_SYSTEM, value: "NT-4" }],
+      });
+    });
+
+    afterAll(async () => {
+      await cleanup("Patient", [pMale, pFem, pOth, pNone]);
+    });
+
+    it("gender:not=male excludes male and INCLUDES records with no gender", async () => {
+      const res = await instance.rest.search("Patient", "gender:not=male");
+      expect(res).toHaveStatus(200);
+      const ids = idsOf(res.body);
+      expect(ids).toEqual(expect.arrayContaining([pFem, pOth, pNone]));
+      expect(ids).not.toContain(pMale);
+    });
+  });
+
+  describe("of-type (Identifier)", () => {
+    const V2_0203 = "http://terminology.hl7.org/CodeSystem/v2-0203";
+    let pMR: string;
+    let pMRT: string;
+    let pMRX: string;
+
+    beforeAll(async () => {
+      pMR = await createOrFail("Patient", {
+        resourceType: "Patient",
+        identifier: [
+          { system: IDENT_SYSTEM, value: "OT-1" },
+          {
+            type: { coding: [{ system: V2_0203, code: "MR" }] },
+            value: "12345",
+          },
+        ],
+      });
+      pMRT = await createOrFail("Patient", {
+        resourceType: "Patient",
+        identifier: [
+          { system: IDENT_SYSTEM, value: "OT-2" },
+          {
+            type: { coding: [{ system: V2_0203, code: "MRT" }] },
+            value: "12345",
+          },
+        ],
+      });
+      pMRX = await createOrFail("Patient", {
+        resourceType: "Patient",
+        identifier: [
+          { system: IDENT_SYSTEM, value: "OT-3" },
+          {
+            type: { coding: [{ system: V2_0203, code: "MR" }] },
+            value: "99999",
+          },
+        ],
+      });
+    });
+
+    afterAll(async () => {
+      await cleanup("Patient", [pMR, pMRT, pMRX]);
+    });
+
+    it("full system|code|value match", async () => {
+      const res = await instance.rest.search(
+        "Patient",
+        `identifier:of-type=${V2_0203}|MR|12345`,
+      );
+      expect(res).toHaveStatus(200);
+      const ids = idsOf(res.body);
+      expect(ids).toContain(pMR);
+      expect(ids).not.toContain(pMRT);
+      expect(ids).not.toContain(pMRX);
+    });
+
+    it("different code does not match", async () => {
+      const res = await instance.rest.search(
+        "Patient",
+        `identifier:of-type=${V2_0203}|MRT|12345`,
+      );
+      expect(res).toHaveStatus(200);
+      const ids = idsOf(res.body);
+      expect(ids).toContain(pMRT);
+      expect(ids).not.toContain(pMR);
+      expect(ids).not.toContain(pMRX);
+    });
+
+    it("different value does not match", async () => {
+      const res = await instance.rest.search(
+        "Patient",
+        `identifier:of-type=${V2_0203}|MR|99999`,
+      );
+      expect(res).toHaveStatus(200);
+      const ids = idsOf(res.body);
+      expect(ids).toContain(pMRX);
+      expect(ids).not.toContain(pMR);
+      expect(ids).not.toContain(pMRT);
+    });
+  });
+});
