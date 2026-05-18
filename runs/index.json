@@ -1,6 +1,24 @@
 {
   "runs": [
     {
+      "id": "run-2026-05-18-181103",
+      "startedAt": "2026-05-18T18:11:03.448Z",
+      "duration_ms": 702333,
+      "commit": "5497b2d",
+      "commitMessage": "Add fhir-candle to the test matrix",
+      "branch": "main",
+      "impls": [
+        "aidbox",
+        "fhir-candle",
+        "hapi",
+        "medplum",
+        "msfhir"
+      ],
+      "pass": 1365,
+      "fail": 565,
+      "skipped": 0
+    },
+    {
       "id": "run-2026-05-18-142049",
       "startedAt": "2026-05-18T14:20:49.230Z",
       "duration_ms": 705402,
