@@ -56,10 +56,15 @@ const server: Server = {
         BOX_DB_PORT: "5432",
         BOX_DB_USER: "aidbox",
         BOX_FHIR_COMPLIANT_MODE: "true",
+        BOX_FHIR_CORRECT_AIDBOX_FORMAT: "true",
         BOX_FHIR_SCHEMA_VALIDATION: "true",
         BOX_FHIR_TERMINOLOGY_ENGINE: "hybrid",
+        BOX_FHIR_SEARCH_COMPARISONS: "true",
+        BOX_FHIR_TERMINOLOGY_SERVICE_BASE_URL: "https://tx.health-samurai.io/fhir",
         BOX_ROOT_CLIENT_SECRET: ROOT_CLIENT_SECRET,
+        BOX_SEARCH_INCLUDE_CONFORMANT: "true",
         BOX_SECURITY_DEV_MODE: "true",
+        BOX_SETTINGS_MODE: "read-write",
         BOX_WEB_PORT: "8080",
       })
       .withWaitStrategy(Wait.forHttp("/health", 8080).withStartupTimeout(120_000))
