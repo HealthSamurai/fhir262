@@ -1,6 +1,23 @@
 {
   "runs": [
     {
+      "id": "run-2026-05-18-142049",
+      "startedAt": "2026-05-18T14:20:49.230Z",
+      "duration_ms": 705402,
+      "commit": "c50df80",
+      "commitMessage": "Add date search tests",
+      "branch": "main",
+      "impls": [
+        "aidbox",
+        "hapi",
+        "medplum",
+        "msfhir"
+      ],
+      "pass": 1258,
+      "fail": 286,
+      "skipped": 0
+    },
+    {
       "id": "run-2026-05-18-102717",
       "startedAt": "2026-05-18T10:27:17.785Z",
       "duration_ms": 939768,
