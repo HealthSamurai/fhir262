@@ -1,4 +1,4 @@
-.PHONY: fresh clean test-all test-all-tmux test-aidbox test-hapi test-medplum test-msfhir ui-dist ui-serve clean-dist format format-check
+.PHONY: fresh clean test-all test-all-tmux test-aidbox test-hapi test-medplum test-msfhir test-fhir-candle ui-dist ui-serve clean-dist format format-check
 
 # Optional test filters (consumed by bin/run.ts via env).
 #   FILTER — jest test-path regex (matches against test file paths)
@@ -23,7 +23,7 @@ RESULTS := .results
 DIST    := dist
 
 test-all:
-	FHIR262_CI=1 $(MAKE) -j2 -k test-aidbox test-hapi test-medplum test-msfhir
+	FHIR262_CI=1 $(MAKE) -j2 -k test-aidbox test-hapi test-medplum test-msfhir test-fhir-candle
 
 TMUX_SESSION := fhir262-tests
 
@@ -43,6 +43,7 @@ test-all-tmux:
 	@tmux split-window -t $(TMUX_SESSION) "FILTER='$(FILTER)' NAME='$(NAME)' $(MAKE) test-hapi; exec $$SHELL"
 	@tmux split-window -t $(TMUX_SESSION) "FILTER='$(FILTER)' NAME='$(NAME)' $(MAKE) test-medplum; exec $$SHELL"
 	@tmux split-window -t $(TMUX_SESSION) "FILTER='$(FILTER)' NAME='$(NAME)' $(MAKE) test-msfhir; exec $$SHELL"
+	@tmux split-window -t $(TMUX_SESSION) "FILTER='$(FILTER)' NAME='$(NAME)' $(MAKE) test-fhir-candle; exec $$SHELL"
 	@tmux select-layout -t $(TMUX_SESSION) tiled
 	@tmux attach -t $(TMUX_SESSION)
 
@@ -61,6 +62,10 @@ test-medplum:
 test-msfhir:
 	@mkdir -p $(RESULTS)
 	bun bin/run.ts -impl impl/msfhir/index.ts -out $(RESULTS)/msfhir.json
+
+test-fhir-candle:
+	@mkdir -p $(RESULTS)
+	bun bin/run.ts -impl impl/fhir-candle/index.ts -out $(RESULTS)/fhir-candle.json
 
 ui-dist:
 	bun bin/build.ts -results $(RESULTS) -dist $(DIST)
