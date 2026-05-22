@@ -104,3 +104,4 @@ absence of `error`/`fatal` severities, not for an empty `issue` array.
 
 - Don't commit without explicit request.
 - Don't add "Generated with Claude Code" attribution to commit messages.
+- Commit messages: short one-line subject only, no body. Focus the subject on the headline change; supporting infra/refactors don't need to be mentioned.
