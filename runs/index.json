@@ -1,6 +1,24 @@
 {
   "runs": [
     {
+      "id": "run-2026-05-22-145319",
+      "startedAt": "2026-05-22T14:53:19.304Z",
+      "duration_ms": 797527,
+      "commit": "48e50e8",
+      "commitMessage": "Add search prefix × range matrix tests",
+      "branch": "main",
+      "impls": [
+        "aidbox",
+        "fhir-candle",
+        "hapi",
+        "medplum",
+        "msfhir"
+      ],
+      "pass": 1362,
+      "fail": 1848,
+      "skipped": 0
+    },
+    {
       "id": "run-2026-05-18-181103",
       "startedAt": "2026-05-18T18:11:03.448Z",
       "duration_ms": 702333,
