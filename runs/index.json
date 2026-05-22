@@ -1,6 +1,24 @@
 {
   "runs": [
     {
+      "id": "run-2026-05-22-151345",
+      "startedAt": "2026-05-22T15:13:45.629Z",
+      "duration_ms": 934251,
+      "commit": "c90f644",
+      "commitMessage": "Cover Patient.birthDate (date type) in prefix × range matrix",
+      "branch": "main",
+      "impls": [
+        "aidbox",
+        "fhir-candle",
+        "hapi",
+        "medplum",
+        "msfhir"
+      ],
+      "pass": 2668,
+      "fail": 2092,
+      "skipped": 0
+    },
+    {
       "id": "run-2026-05-22-145319",
       "startedAt": "2026-05-22T14:53:19.304Z",
       "duration_ms": 797527,
