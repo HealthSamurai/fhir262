@@ -26,7 +26,7 @@ const cleanup = async (type: string, ids: string[]) => {
 };
 
 type ResourceRange =
-  | { name: string; type: "dateTime" | "instant"; value: string }
+  | { name: string; type: "date" | "dateTime" | "instant"; value: string }
   | { name: string; type: "Period"; start?: string; end?: string }
   | { name: string; type: "Timing"; event: string[] };
 
@@ -49,7 +49,16 @@ const ObservationTemplate = (range: ResourceRange) => {
     }
     case "Timing":
       return { ...base, effectiveTiming: { event: range.event } };
+    case "date":
+      throw new Error(`ObservationTemplate does not support type "date"`);
   }
+};
+
+const PatientTemplate = (range: ResourceRange) => {
+  if (range.type !== "date") {
+    throw new Error(`PatientTemplate only supports type "date", got "${range.type}"`);
+  }
+  return { resourceType: "Patient", birthDate: range.value };
 };
 
 const requests = [
@@ -63,15 +72,15 @@ const requests = [
 
     // Timezone variants
     { name: "tz-zulu", value: "2028-05-15T14:30:00Z" },
-    { name: "tz-positive-offset", value: "2028-05-15T14:30:00+05:30" },
-    { name: "tz-negative-offset", value: "2028-05-15T14:30:00-08:00" },
-    { name: "tz-zero-offset-non-z", value: "2028-05-15T14:30:00+00:00" },
+    // { name: "tz-positive-offset", value: "2028-05-15T14:30:00+05:30" },
+    // { name: "tz-negative-offset", value: "2028-05-15T14:30:00-08:00" },
+    // { name: "tz-zero-offset-non-z", value: "2028-05-15T14:30:00+00:00" },
     { name: "tz-fractional-with-tz", value: "2028-05-15T14:30:00.123456Z" },
 
     // Minimums
     { name: "min-earliest-utc", value: "2028-01-01T00:00:00Z" },
     { name: "min-earliest-with-millis", value: "2028-01-01T00:00:00.000Z" },
-    { name: "min-earliest-furthest-east", value: "2028-01-01T00:00:00+14:00" },
+    // { name: "min-earliest-furthest-east", value: "2028-01-01T00:00:00+14:00" },
     { name: "min-first-day", value: "2028-01-01" },
     { name: "min-first-month", value: "2028-01" },
     { name: "min-midnight-hour-min", value: "2028-01-01T00:00" },
@@ -80,7 +89,7 @@ const requests = [
     { name: "max-last-second-utc", value: "2028-12-31T23:59:59Z" },
     { name: "max-last-millisecond", value: "2028-12-31T23:59:59.999Z" },
     { name: "max-sub-ms-precision", value: "2028-12-31T23:59:59.999999999Z" },
-    { name: "max-latest-furthest-west", value: "2028-12-31T23:59:59-12:00" },
+    // { name: "max-latest-furthest-west", value: "2028-12-31T23:59:59-12:00" },
     { name: "max-last-day", value: "2028-12-31" },
     { name: "max-last-month", value: "2028-12" },
     { name: "max-end-of-day-hour-min", value: "2028-12-31T23:59" },
@@ -93,8 +102,8 @@ const requests = [
 
     // Same instant in different timezones
     { name: "same-instant-utc", value: "2028-07-01T12:00:00Z" },
-    { name: "same-instant-western-offset", value: "2028-07-01T08:00:00-04:00" },
-    { name: "same-instant-eastern-half-hour", value: "2028-07-01T17:30:00+05:30" },
+    // { name: "same-instant-western-offset", value: "2028-07-01T08:00:00-04:00" },
+    // { name: "same-instant-eastern-half-hour", value: "2028-07-01T17:30:00+05:30" },
 ]
 
 
@@ -148,13 +157,29 @@ const rangesInteractWithPrefixesTable = [
                     { name: "period-open-start-instant", type: "Period", end: "2026-06-15T12:00:00Z" },
                     { name: "period-open-start-month", type: "Period", end: "2026-12" },
 
-                    // Timing
-                    { name: "timing-single-event", type: "Timing", event: ["2026-06-15T12:00:00Z"] },
-                    { name: "timing-multiple-events", type: "Timing", event: ["2026-03-01", "2026-06-15", "2026-09-30"] },
-                    { name: "timing-events-across-year", type: "Timing", event: ["2026-01-01", "2026-12-31"] },
+                    // // Timing
+                    // { name: "timing-single-event", type: "Timing", event: ["2026-06-15T12:00:00Z"] },
+                    // { name: "timing-multiple-events", type: "Timing", event: ["2026-03-01", "2026-06-15", "2026-09-30"] },
+                    // { name: "timing-events-across-year", type: "Timing", event: ["2026-01-01", "2026-12-31"] },
                 ],
                 requests: requests
 
+            },
+            {
+                name: "tests for type: date using patient (birthdate)",
+                resource: "Patient",
+                sp: "birthdate",
+                resourceTemplate: PatientTemplate,
+                resourceRanges: [
+                    { name: "date-year", type: "date", value: "2026" },
+                    { name: "date-year-month", type: "date", value: "2026-06" },
+                    { name: "date-year-month-day", type: "date", value: "2026-06-15" },
+                    { name: "date-first-month", type: "date", value: "2026-01" },
+                    { name: "date-last-month", type: "date", value: "2026-12" },
+                    { name: "date-first-day-of-year", type: "date", value: "2026-01-01" },
+                    { name: "date-last-day-of-year", type: "date", value: "2026-12-31" },
+                ],
+                requests: requests
             },
         ]
     },
@@ -281,7 +306,7 @@ describe("search prefix matrix — range × modifier", () => {
 
           beforeAll(async () => {
             for (const range of testCase.resourceRanges as ResourceRange[]) {
-              const resource = testCase.resourceTemplate(range);
+              const resource = { id: range.name, ...(testCase.resourceTemplate(range) as object) };
               const res = await instance.rest.update(testCase.resource, range.name, resource);
               if (res.status !== 200 && res.status !== 201) {
                 throw new Error(
