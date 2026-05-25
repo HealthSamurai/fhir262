@@ -189,7 +189,32 @@ const rangesInteractWithPrefixesTable = [
         |--[P]--|
 |--[R]--|
 `,
-        modifierExpectation: { eq: false, ne: true, gt: false, ge: false, lt: true, le: true, sa: false, eb: false, ap: false },
+        modifierExpectation: { null: false, eq: false, ne: true, gt: false, ge: false, lt: true, le: true, sa: false, eb: false, ap: false },
+        tests: [
+            {
+                name: "tests for type: Period using observation",
+                resource: "Observation",
+                sp: "date",
+                resourceTemplate: ObservationTemplate,
+                resourceRanges: [
+                    { name: "period-closed-full-year-before", type: "Period", start: "2027-01-01", end: "2028-01-01T00:00:00Z" },
+                    { name: "period-closed-last-month", type: "Period", start: "2027-12-01", end: "2028-01-01T00:00:00Z" },
+                    { name: "period-closed-last-day", type: "Period", start: "2027-12-31", end: "2028-01-01T00:00:00Z" },
+                    { name: "period-closed-last-hour", type: "Period", start: "2027-12-31T23:00:00Z", end: "2028-01-01T00:00:00Z" },
+                    { name: "period-closed-last-second", type: "Period", start: "2027-12-31T23:59:59Z", end: "2028-01-01T00:00:00Z" },
+                    { name: "period-closed-coarse-start", type: "Period", start: "2027", end: "2028-01-01T00:00:00Z" },
+                    { name: "period-open-start", type: "Period", end: "2028-01-01T00:00:00Z" },
+                ],
+                requests: [
+                    { name: "year", value: "2028" },
+                    { name: "min-earliest-utc", value: "2028-01-01T00:00:00Z" },
+                    { name: "min-earliest-with-millis", value: "2028-01-01T00:00:00.000Z" },
+                    { name: "min-first-day", value: "2028-01-01" },
+                    { name: "min-first-month", value: "2028-01" },
+                    { name: "min-midnight-hour-min", value: "2028-01-01T00:00" },
+                ],
+            },
+        ],
     },
     {
         name: "resource overlaps request start",
