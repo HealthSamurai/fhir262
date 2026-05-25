@@ -62,6 +62,7 @@ const server: Server = {
         BOX_FHIR_SEARCH_COMPARISONS: "true",
         BOX_FHIR_TERMINOLOGY_SERVICE_BASE_URL: "https://tx.health-samurai.io/fhir",
         BOX_ROOT_CLIENT_SECRET: ROOT_CLIENT_SECRET,
+        BOX_SEARCH_DATE_MULTIRANGE: "true",
         BOX_SEARCH_INCLUDE_CONFORMANT: "true",
         BOX_SECURITY_DEV_MODE: "true",
         BOX_SETTINGS_MODE: "read-write",

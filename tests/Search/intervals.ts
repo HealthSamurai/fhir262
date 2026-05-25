@@ -250,14 +250,62 @@ const rangesInteractWithPrefixesTable = [
 |----[R]----|
 `,
         modifierExpectation: { null: false, eq: false, ne: true, gt: true, ge: true, lt: true, le: true, sa: false, eb: false, ap: true },
+        tests: [
+            {
+                name: "tests for type: Period, dateTime using observation",
+                resource: "Observation",
+                sp: "date",
+                resourceTemplate: ObservationTemplate,
+                resourceRanges: [
+                    { name: "period-month-window", type: "Period", start: "2028-05", end: "2028-07" },
+                    { name: "period-full-year-day-precision", type: "Period", start: "2028-01-01", end: "2028-12-31" },
+                    { name: "period-precise-datetime", type: "Period", start: "2028-05-31T12:00:00Z", end: "2028-07-01T12:00:00Z" },
+                    { name: "period-open-start", type: "Period", end: "2028-07-15" },
+
+                    { name: "datetime-year", type: "dateTime", value: "2028" },
+                ],
+                requests: [
+                    { name: "year-month", value: "2028-06" },
+                ],
+            },
+            {
+                name: "tests for type: date using patient (birthdate)",
+                resource: "Patient",
+                sp: "birthdate",
+                resourceTemplate: PatientTemplate,
+                resourceRanges: [
+                    { name: "date-year", type: "date", value: "2028" },
+                ],
+                requests: [
+                    { name: "year-month", value: "2028-06" },
+                ],
+            },
+        ],
     },
     {
-        name: "resource has open start and overlaps request",
+        name: "resource is instant touching request start",
         rangeVisual: `
  |----[P]----|
 [R]
 `,
         modifierExpectation: { null: true, eq: true, ne: false, gt: false, ge: true, lt: false, le: true, sa: false, eb: false, ap: true },
+        tests: [
+            {
+                name: "tests for type: instant using observation",
+                resource: "Observation",
+                sp: "date",
+                resourceTemplate: ObservationTemplate,
+                resourceRanges: [
+                    { name: "instant-utc", type: "instant", value: "2028-01-01T00:00:00Z" },
+                    { name: "instant-millis", type: "instant", value: "2028-01-01T00:00:00.000Z" },
+                    { name: "instant-tz-positive", type: "instant", value: "2028-01-01T05:30:00+05:30" },
+                    { name: "instant-tz-negative", type: "instant", value: "2027-12-31T16:00:00-08:00" },
+                ],
+                requests: [
+                    { name: "year", value: "2028" },
+                ],
+            },
+        ],
     },
     {
         name: "resource starts with request but ends earlier",
@@ -266,6 +314,40 @@ const rangesInteractWithPrefixesTable = [
 |--[R]--|
 `,
         modifierExpectation: { null: true, eq: true, ne: false, gt: false, ge: true, lt: false, le: true, sa: false, eb: false, ap: true },
+        tests: [
+            {
+                name: "tests for type: Period, dateTime using observation",
+                resource: "Observation",
+                sp: "date",
+                resourceTemplate: ObservationTemplate,
+                resourceRanges: [
+                    { name: "period-day-precision", type: "Period", start: "2028-01-01", end: "2028-06-15" },
+                    { name: "period-coarse-precision", type: "Period", start: "2028-01", end: "2028-06" },
+                    { name: "period-precise-datetime", type: "Period", start: "2028-01-01T00:00:00Z", end: "2028-06-15T12:00:00Z" },
+                    { name: "period-year-start-precise-end", type: "Period", start: "2028", end: "2028-11-30T12:00:00Z" },
+
+                    { name: "datetime-year-month", type: "dateTime", value: "2028-01" },
+                    { name: "datetime-year-month-day", type: "dateTime", value: "2028-01-01" },
+                    { name: "datetime-seconds", type: "dateTime", value: "2028-01-01T00:00:00Z" },
+                ],
+                requests: [
+                    { name: "year", value: "2028" },
+                ],
+            },
+            {
+                name: "tests for type: date using patient (birthdate)",
+                resource: "Patient",
+                sp: "birthdate",
+                resourceTemplate: PatientTemplate,
+                resourceRanges: [
+                    { name: "date-year-month", type: "date", value: "2028-01" },
+                    { name: "date-year-month-day", type: "date", value: "2028-01-01" },
+                ],
+                requests: [
+                    { name: "year", value: "2028" },
+                ],
+            },
+        ],
     },
     {
         name: "resource exactly matches request",
@@ -274,6 +356,37 @@ const rangesInteractWithPrefixesTable = [
 |--[R]--|
 `,
         modifierExpectation: { null: true, eq: true, ne: false, gt: false, ge: true, lt: false, le: true, sa: false, eb: false, ap: true },
+        tests: [
+            {
+                name: "tests for type: Period, dateTime using observation",
+                resource: "Observation",
+                sp: "date",
+                resourceTemplate: ObservationTemplate,
+                resourceRanges: [
+                    { name: "period-day-precision", type: "Period", start: "2028-01-01", end: "2028-12-31" },
+                    { name: "period-year-month-precision", type: "Period", start: "2028-01", end: "2028-12" },
+                    { name: "period-year-precision", type: "Period", start: "2028", end: "2028" },
+                    { name: "period-precise-datetime", type: "Period", start: "2028-01-01T00:00:00Z", end: "2028-12-31T23:59:59.999Z" },
+
+                    { name: "datetime-year", type: "dateTime", value: "2028" },
+                ],
+                requests: [
+                    { name: "year", value: "2028" },
+                ],
+            },
+            {
+                name: "tests for type: date using patient (birthdate)",
+                resource: "Patient",
+                sp: "birthdate",
+                resourceTemplate: PatientTemplate,
+                resourceRanges: [
+                    { name: "date-year", type: "date", value: "2028" },
+                ],
+                requests: [
+                    { name: "year", value: "2028" },
+                ],
+            },
+        ],
     },
     {
         name: "resource starts with request but ends later",
@@ -282,6 +395,23 @@ const rangesInteractWithPrefixesTable = [
 |--[R]----|
 `,
         modifierExpectation: { null: false, eq: false, ne: true, gt: true, ge: true, lt: false, le: false, sa: false, eb: false, ap: true },
+        tests: [
+            {
+                name: "tests for type: Period using observation",
+                resource: "Observation",
+                sp: "date",
+                resourceTemplate: ObservationTemplate,
+                resourceRanges: [
+                    { name: "period-day-precision", type: "Period", start: "2028-01-01", end: "2029-06-15" },
+                    { name: "period-coarse-precision", type: "Period", start: "2028-01", end: "2029-06" },
+                    { name: "period-precise-datetime", type: "Period", start: "2028-01-01T00:00:00Z", end: "2029-06-15T12:00:00Z" },
+                    { name: "period-open-end", type: "Period", start: "2028-01-01" },
+                ],
+                requests: [
+                    { name: "year", value: "2028" },
+                ],
+            },
+        ],
     },
     {
         name: "resource inside request",
@@ -290,6 +420,40 @@ const rangesInteractWithPrefixesTable = [
   |--[R]--|
 `,
         modifierExpectation: { null: true, eq: true, ne: false, gt: false, ge: true, lt: false, le: true, sa: false, eb: false, ap: true },
+        tests: [
+            {
+                name: "tests for type: Period, dateTime using observation",
+                resource: "Observation",
+                sp: "date",
+                resourceTemplate: ObservationTemplate,
+                resourceRanges: [
+                    { name: "period-day-precision", type: "Period", start: "2028-02-01", end: "2028-11-30" },
+                    { name: "period-coarse-precision", type: "Period", start: "2028-02", end: "2028-11" },
+                    { name: "period-precise-datetime", type: "Period", start: "2028-06-15T10:00:00Z", end: "2028-06-15T11:00:00Z" },
+                    { name: "period-single-day", type: "Period", start: "2028-06-15", end: "2028-06-15" },
+
+                    { name: "datetime-year-month", type: "dateTime", value: "2028-06" },
+                    { name: "datetime-year-month-day", type: "dateTime", value: "2028-06-15" },
+                    { name: "datetime-seconds", type: "dateTime", value: "2028-06-15T12:00:00Z" },
+                ],
+                requests: [
+                    { name: "year", value: "2028" },
+                ],
+            },
+            {
+                name: "tests for type: date using patient (birthdate)",
+                resource: "Patient",
+                sp: "birthdate",
+                resourceTemplate: PatientTemplate,
+                resourceRanges: [
+                    { name: "date-year-month", type: "date", value: "2028-06" },
+                    { name: "date-year-month-day", type: "date", value: "2028-06-15" },
+                ],
+                requests: [
+                    { name: "year", value: "2028" },
+                ],
+            },
+        ],
     },
     {
         name: "resource ends with request but starts later",
@@ -298,6 +462,39 @@ const rangesInteractWithPrefixesTable = [
   |--[R]--|
 `,
         modifierExpectation: { null: true, eq: true, ne: false, gt: false, ge: true, lt: false, le: true, sa: false, eb: false, ap: true },
+        tests: [
+            {
+                name: "tests for type: Period, dateTime using observation",
+                resource: "Observation",
+                sp: "date",
+                resourceTemplate: ObservationTemplate,
+                resourceRanges: [
+                    { name: "period-day-precision", type: "Period", start: "2028-06-01", end: "2028-12-31" },
+                    { name: "period-coarse-precision", type: "Period", start: "2028-06", end: "2028-12" },
+                    { name: "period-precise-datetime", type: "Period", start: "2028-06-15T12:00:00Z", end: "2028-12-31T23:59:59.999Z" },
+                    { name: "period-last-month-only", type: "Period", start: "2028-12", end: "2028-12-31" },
+
+                    { name: "datetime-year-month", type: "dateTime", value: "2028-12" },
+                    { name: "datetime-year-month-day", type: "dateTime", value: "2028-12-31" },
+                ],
+                requests: [
+                    { name: "year", value: "2028" },
+                ],
+            },
+            {
+                name: "tests for type: date using patient (birthdate)",
+                resource: "Patient",
+                sp: "birthdate",
+                resourceTemplate: PatientTemplate,
+                resourceRanges: [
+                    { name: "date-year-month", type: "date", value: "2028-12" },
+                    { name: "date-year-month-day", type: "date", value: "2028-12-31" },
+                ],
+                requests: [
+                    { name: "year", value: "2028" },
+                ],
+            },
+        ],
     },
     {
         name: "resource overlaps request end",
@@ -306,14 +503,47 @@ const rangesInteractWithPrefixesTable = [
     |--[R]--|
 `,
         modifierExpectation: { null: false, eq: false, ne: true, gt: true, ge: true, lt: false, le: false, sa: false, eb: false, ap: true },
+        tests: [
+            {
+                name: "tests for type: Period using observation",
+                resource: "Observation",
+                sp: "date",
+                resourceTemplate: ObservationTemplate,
+                resourceRanges: [
+                    { name: "period-day-precision", type: "Period", start: "2028-06-01", end: "2029-06-15" },
+                    { name: "period-coarse-precision", type: "Period", start: "2028-06", end: "2029-06" },
+                    { name: "period-precise-datetime", type: "Period", start: "2028-06-15T12:00:00Z", end: "2029-01-15T00:00:00Z" },
+                    { name: "period-open-end", type: "Period", start: "2028-06-15" },
+                ],
+                requests: [
+                    { name: "year", value: "2028" },
+                ],
+            },
+        ],
     },
     {
-        name: "resource has open end and overlaps request",
+        name: "resource is instant touching request end",
         rangeVisual: `
 |----[P]----|
            [R]
 `,
         modifierExpectation: { null: true, eq: true, ne: false, gt: false, ge: true, lt: false, le: true, sa: false, eb: false, ap: true },
+        tests: [
+            {
+                name: "tests for type: instant using observation",
+                resource: "Observation",
+                sp: "date",
+                resourceTemplate: ObservationTemplate,
+                resourceRanges: [
+                    { name: "instant-utc", type: "instant", value: "2028-12-31T23:59:59.999Z" },
+                    { name: "instant-tz-positive", type: "instant", value: "2029-01-01T05:29:59.999+05:30" },
+                    { name: "instant-tz-negative", type: "instant", value: "2028-12-31T15:59:59.999-08:00" },
+                ],
+                requests: [
+                    { name: "year", value: "2028" },
+                ],
+            },
+        ],
     },
     {
         name: "resource after request touching end",
@@ -322,6 +552,28 @@ const rangesInteractWithPrefixesTable = [
         |--[R]--|
 `,
         modifierExpectation: { null: false, eq: false, ne: true, gt: true, ge: true, lt: false, le: true, sa: false, eb: false, ap: false },
+        tests: [
+            {
+                name: "tests for type: Period using observation",
+                resource: "Observation",
+                sp: "date",
+                resourceTemplate: ObservationTemplate,
+                resourceRanges: [
+                    { name: "period-day-precision-end", type: "Period", start: "2028-12-31T23:59:59.999Z", end: "2029-06-30" },
+                    { name: "period-coarse-precision-end", type: "Period", start: "2028-12-31T23:59:59.999Z", end: "2030" },
+                    { name: "period-precise-datetime-end", type: "Period", start: "2028-12-31T23:59:59.999Z", end: "2029-06-15T12:00:00Z" },
+                    { name: "period-open-end", type: "Period", start: "2028-12-31T23:59:59.999Z" },
+                ],
+                requests: [
+                    { name: "year", value: "2028" },
+                    { name: "max-last-second-utc", value: "2028-12-31T23:59:59Z" },
+                    { name: "max-last-millisecond", value: "2028-12-31T23:59:59.999Z" },
+                    { name: "max-last-day", value: "2028-12-31" },
+                    { name: "max-last-month", value: "2028-12" },
+                    { name: "max-end-of-day-hour-min", value: "2028-12-31T23:59" },
+                ],
+            },
+        ],
     },
     {
         name: "resource after request with gap",
@@ -330,6 +582,49 @@ const rangesInteractWithPrefixesTable = [
             |--[R]--|
 `,
         modifierExpectation: { null: false, eq: false, ne: true, gt: true, ge: true, lt: false, le: false, sa: true, eb: false, ap: false },
+        tests: [
+            {
+                name: "tests for type: dateTime, Period, instant using observation",
+                resource: "Observation",
+                sp: "date",
+                resourceTemplate: ObservationTemplate,
+                resourceRanges: [
+                    { name: "datetime-year", type: "dateTime", value: "2030" },
+                    { name: "datetime-year-month", type: "dateTime", value: "2030-06" },
+                    { name: "datetime-year-month-day", type: "dateTime", value: "2030-06-15" },
+                    { name: "datetime-hours-minutes", type: "dateTime", value: "2030-06-15T12:30:00+00:00" },
+                    { name: "datetime-seconds", type: "dateTime", value: "2030-06-15T12:30:45+00:00" },
+                    { name: "datetime-fractional-seconds", type: "dateTime", value: "2030-06-15T12:30:45.123+00:00" },
+                    { name: "datetime-timezone-utc", type: "dateTime", value: "2030-06-15T12:30:45Z" },
+                    { name: "datetime-timezone-positive", type: "dateTime", value: "2030-06-15T12:30:45+05:30" },
+                    { name: "datetime-timezone-negative", type: "dateTime", value: "2030-06-15T12:30:45-08:00" },
+
+                    { name: "instant-utc", type: "instant", value: "2030-06-15T12:30:45Z" },
+                    { name: "instant-millis", type: "instant", value: "2030-06-15T12:30:45.123Z" },
+                    { name: "instant-nanos", type: "instant", value: "2030-06-15T12:30:45.123456789Z" },
+                    { name: "instant-timezone-positive", type: "instant", value: "2030-06-15T12:30:45+05:30" },
+                    { name: "instant-timezone-negative", type: "instant", value: "2030-06-15T12:30:45-08:00" },
+
+                    { name: "period-day-precision", type: "Period", start: "2030-06-01", end: "2030-06-30" },
+                    { name: "period-coarse-precision", type: "Period", start: "2030", end: "2030-12" },
+                    { name: "period-precise-datetime", type: "Period", start: "2030-06-15T10:00:00Z", end: "2030-06-15T11:00:00Z" },
+                    { name: "period-open-end", type: "Period", start: "2030-01-01" },
+                ],
+                requests: requests
+            },
+            {
+                name: "tests for type: date using patient (birthdate)",
+                resource: "Patient",
+                sp: "birthdate",
+                resourceTemplate: PatientTemplate,
+                resourceRanges: [
+                    { name: "date-year", type: "date", value: "2030" },
+                    { name: "date-year-month", type: "date", value: "2030-06" },
+                    { name: "date-year-month-day", type: "date", value: "2030-06-15" },
+                ],
+                requests: requests
+            },
+        ],
     },
 ]
 
