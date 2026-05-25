@@ -1,6 +1,24 @@
 {
   "runs": [
     {
+      "id": "run-2026-05-25-122441",
+      "startedAt": "2026-05-25T12:24:41.882Z",
+      "duration_ms": 834091,
+      "commit": "37b305d",
+      "commitMessage": "[misc] Add all cases for search on intervals table",
+      "branch": "main",
+      "impls": [
+        "aidbox",
+        "fhir-candle",
+        "hapi",
+        "medplum",
+        "msfhir"
+      ],
+      "pass": 5168,
+      "fail": 2692,
+      "skipped": 0
+    },
+    {
       "id": "run-2026-05-22-154319",
       "startedAt": "2026-05-22T15:43:19.799Z",
       "duration_ms": 880819,
