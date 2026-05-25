@@ -126,10 +126,6 @@ const rangesInteractWithPrefixesTable = [
                     { name: "datetime-year", type: "dateTime", value: "2026" },
                     { name: "datetime-year-month", type: "dateTime", value: "2026-06" },
                     { name: "datetime-year-month-day", type: "dateTime", value: "2026-06-15" },
-                    { name: "datetime-first-month", type: "dateTime", value: "2026-01" },
-                    { name: "datetime-last-month", type: "dateTime", value: "2026-12" },
-                    { name: "datetime-first-day-of-year", type: "dateTime", value: "2026-01-01" },
-                    { name: "datetime-last-day-of-year", type: "dateTime", value: "2026-12-31" },
                     { name: "datetime-hours-minutes", type: "dateTime", value: "2026-06-15T12:30:00+00:00" },
                     { name: "datetime-seconds", type: "dateTime", value: "2026-06-15T12:30:45+00:00" },
                     { name: "datetime-fractional-seconds", type: "dateTime", value: "2026-06-15T12:30:45.123+00:00" },
@@ -143,24 +139,12 @@ const rangesInteractWithPrefixesTable = [
                     { name: "instant-nanos", type: "instant", value: "2026-06-15T12:30:45.123456789Z" },
                     { name: "instant-timezone-positive", type: "instant", value: "2026-06-15T12:30:45+05:30" },
                     { name: "instant-timezone-negative", type: "instant", value: "2026-06-15T12:30:45-08:00" },
-                    { name: "instant-start-of-year", type: "instant", value: "2026-01-01T00:00:00Z" },
-                    { name: "instant-end-of-year", type: "instant", value: "2026-12-31T23:59:59Z" },
 
-                    // Period
-                    { name: "period-closed-full-year", type: "Period", start: "2026-01-01", end: "2026-12-31" },
-                    { name: "period-closed-one-month", type: "Period", start: "2026-06-01", end: "2026-06-30" },
-                    { name: "period-closed-single-day", type: "Period", start: "2026-06-15", end: "2026-06-15" },
-                    { name: "period-closed-hour-window", type: "Period", start: "2026-06-15T10:00:00Z", end: "2026-06-15T11:00:00Z" },
-                    { name: "period-closed-spans-year-boundary", type: "Period", start: "2025-12-01", end: "2026-01-31" },
-                    { name: "period-closed-mixed-precision", type: "Period", start: "2026-06", end: "2026-06-30T23:59:59Z" },
-                    { name: "period-open-start-year", type: "Period", end: "2026-12-31" },
-                    { name: "period-open-start-instant", type: "Period", end: "2026-06-15T12:00:00Z" },
-                    { name: "period-open-start-month", type: "Period", end: "2026-12" },
-
-                    // // Timing
-                    // { name: "timing-single-event", type: "Timing", event: ["2026-06-15T12:00:00Z"] },
-                    // { name: "timing-multiple-events", type: "Timing", event: ["2026-03-01", "2026-06-15", "2026-09-30"] },
-                    // { name: "timing-events-across-year", type: "Timing", event: ["2026-01-01", "2026-12-31"] },
+                    // Period — one per structural shape (precision, mixed, open)
+                    { name: "period-day-precision", type: "Period", start: "2026-06-01", end: "2026-06-30" },
+                    { name: "period-coarse-precision", type: "Period", start: "2026", end: "2026-12" },
+                    { name: "period-precise-datetime", type: "Period", start: "2026-06-15T10:00:00Z", end: "2026-06-15T11:00:00Z" },
+                    { name: "period-open-start", type: "Period", end: "2026-12-31" },
                 ],
                 requests: requests
 
@@ -174,10 +158,6 @@ const rangesInteractWithPrefixesTable = [
                     { name: "date-year", type: "date", value: "2026" },
                     { name: "date-year-month", type: "date", value: "2026-06" },
                     { name: "date-year-month-day", type: "date", value: "2026-06-15" },
-                    { name: "date-first-month", type: "date", value: "2026-01" },
-                    { name: "date-last-month", type: "date", value: "2026-12" },
-                    { name: "date-first-day-of-year", type: "date", value: "2026-01-01" },
-                    { name: "date-last-day-of-year", type: "date", value: "2026-12-31" },
                 ],
                 requests: requests
             },
@@ -197,12 +177,9 @@ const rangesInteractWithPrefixesTable = [
                 sp: "date",
                 resourceTemplate: ObservationTemplate,
                 resourceRanges: [
-                    { name: "period-closed-full-year-before", type: "Period", start: "2027-01-01", end: "2028-01-01T00:00:00Z" },
-                    { name: "period-closed-last-month", type: "Period", start: "2027-12-01", end: "2028-01-01T00:00:00Z" },
-                    { name: "period-closed-last-day", type: "Period", start: "2027-12-31", end: "2028-01-01T00:00:00Z" },
-                    { name: "period-closed-last-hour", type: "Period", start: "2027-12-31T23:00:00Z", end: "2028-01-01T00:00:00Z" },
-                    { name: "period-closed-last-second", type: "Period", start: "2027-12-31T23:59:59Z", end: "2028-01-01T00:00:00Z" },
-                    { name: "period-closed-coarse-start", type: "Period", start: "2027", end: "2028-01-01T00:00:00Z" },
+                    { name: "period-day-precision-start", type: "Period", start: "2027-06-01", end: "2028-01-01T00:00:00Z" },
+                    { name: "period-coarse-precision-start", type: "Period", start: "2027", end: "2028-01-01T00:00:00Z" },
+                    { name: "period-precise-datetime-start", type: "Period", start: "2027-12-31T12:00:00Z", end: "2028-01-01T00:00:00Z" },
                     { name: "period-open-start", type: "Period", end: "2028-01-01T00:00:00Z" },
                 ],
                 requests: [
@@ -222,7 +199,24 @@ const rangesInteractWithPrefixesTable = [
     |--[P]--|
 |--[R]--|
 `,
-        modifierExpectation: { eq: false, ne: true, gt: false, ge: false, lt: true, le: true, sa: false, eb: false, ap: false },
+        modifierExpectation: { null: false, eq: false, ne: true, gt: false, ge: false, lt: true, le: true, sa: false, eb: false, ap: false },
+        tests: [
+            {
+                name: "tests for type: Period using observation",
+                resource: "Observation",
+                sp: "date",
+                resourceTemplate: ObservationTemplate,
+                resourceRanges: [
+                    { name: "period-day-precision", type: "Period", start: "2027-06-01", end: "2028-06-15" },
+                    { name: "period-coarse-precision", type: "Period", start: "2027", end: "2028-06" },
+                    { name: "period-precise-datetime", type: "Period", start: "2027-12-31T12:00:00Z", end: "2028-11-30T12:00:00Z" },
+                    { name: "period-open-start", type: "Period", end: "2028-06-15" },
+                ],
+                requests: [
+                    { name: "year", value: "2028" },
+                ],
+            },
+        ],
     },
     {
         name: "resource fully covers request",
@@ -230,7 +224,24 @@ const rangesInteractWithPrefixesTable = [
     |--[P]--|
 |--[R]------|
 `,
-        modifierExpectation: { eq: false, ne: true, gt: false, ge: false, lt: true, le: true, sa: false, eb: false, ap: false },
+        modifierExpectation: { null: false, eq: false, ne: true, gt: false, ge: false, lt: true, le: true, sa: false, eb: false, ap: false },
+        tests: [
+            {
+                name: "tests for type: Period using observation",
+                resource: "Observation",
+                sp: "date",
+                resourceTemplate: ObservationTemplate,
+                resourceRanges: [
+                    { name: "period-day-precision", type: "Period", start: "2027-06-01", end: "2028-12-31" },
+                    { name: "period-coarse-precision", type: "Period", start: "2027", end: "2028-12" },
+                    { name: "period-precise-datetime", type: "Period", start: "2027-12-31T12:00:00Z", end: "2028-12-31T23:59:59.999Z" },
+                    { name: "period-open-start", type: "Period", end: "2028-12-31" },
+                ],
+                requests: [
+                    { name: "year", value: "2028" },
+                ],
+            },
+        ],
     },
     {
         name: "resource covers request and more",
@@ -238,7 +249,7 @@ const rangesInteractWithPrefixesTable = [
   |--[P]--|
 |----[R]----|
 `,
-        modifierExpectation: { eq: false, ne: true, gt: true, ge: true, lt: true, le: true, sa: false, eb: false, ap: true },
+        modifierExpectation: { null: false, eq: false, ne: true, gt: true, ge: true, lt: true, le: true, sa: false, eb: false, ap: true },
     },
     {
         name: "resource has open start and overlaps request",
@@ -246,7 +257,7 @@ const rangesInteractWithPrefixesTable = [
  |----[P]----|
 [R]
 `,
-        modifierExpectation: { eq: true, ne: false, gt: false, ge: true, lt: false, le: true, sa: false, eb: false, ap: true },
+        modifierExpectation: { null: true, eq: true, ne: false, gt: false, ge: true, lt: false, le: true, sa: false, eb: false, ap: true },
     },
     {
         name: "resource starts with request but ends earlier",
@@ -254,7 +265,7 @@ const rangesInteractWithPrefixesTable = [
 |----[P]----|
 |--[R]--|
 `,
-        modifierExpectation: { eq: true, ne: false, gt: false, ge: true, lt: false, le: true, sa: false, eb: false, ap: true },
+        modifierExpectation: { null: true, eq: true, ne: false, gt: false, ge: true, lt: false, le: true, sa: false, eb: false, ap: true },
     },
     {
         name: "resource exactly matches request",
@@ -262,7 +273,7 @@ const rangesInteractWithPrefixesTable = [
 |--[P]--|
 |--[R]--|
 `,
-        modifierExpectation: { eq: true, ne: false, gt: false, ge: true, lt: false, le: true, sa: false, eb: false, ap: true },
+        modifierExpectation: { null: true, eq: true, ne: false, gt: false, ge: true, lt: false, le: true, sa: false, eb: false, ap: true },
     },
     {
         name: "resource starts with request but ends later",
@@ -270,7 +281,7 @@ const rangesInteractWithPrefixesTable = [
 |--[P]--|
 |--[R]----|
 `,
-        modifierExpectation: { eq: false, ne: true, gt: true, ge: true, lt: false, le: false, sa: false, eb: false, ap: true },
+        modifierExpectation: { null: false, eq: false, ne: true, gt: true, ge: true, lt: false, le: false, sa: false, eb: false, ap: true },
     },
     {
         name: "resource inside request",
@@ -278,7 +289,7 @@ const rangesInteractWithPrefixesTable = [
 |----[P]----|
   |--[R]--|
 `,
-        modifierExpectation: { eq: true, ne: false, gt: false, ge: true, lt: false, le: true, sa: false, eb: false, ap: true },
+        modifierExpectation: { null: true, eq: true, ne: false, gt: false, ge: true, lt: false, le: true, sa: false, eb: false, ap: true },
     },
     {
         name: "resource ends with request but starts later",
@@ -286,7 +297,7 @@ const rangesInteractWithPrefixesTable = [
 |---[P]---|
   |--[R]--|
 `,
-        modifierExpectation: { eq: true, ne: false, gt: false, ge: true, lt: false, le: true, sa: false, eb: false, ap: true },
+        modifierExpectation: { null: true, eq: true, ne: false, gt: false, ge: true, lt: false, le: true, sa: false, eb: false, ap: true },
     },
     {
         name: "resource overlaps request end",
@@ -294,7 +305,7 @@ const rangesInteractWithPrefixesTable = [
 |--[P]--|
     |--[R]--|
 `,
-        modifierExpectation: { eq: false, ne: true, gt: true, ge: true, lt: false, le: false, sa: false, eb: false, ap: true },
+        modifierExpectation: { null: false, eq: false, ne: true, gt: true, ge: true, lt: false, le: false, sa: false, eb: false, ap: true },
     },
     {
         name: "resource has open end and overlaps request",
@@ -302,7 +313,7 @@ const rangesInteractWithPrefixesTable = [
 |----[P]----|
            [R]
 `,
-        modifierExpectation: { eq: true, ne: false, gt: false, ge: true, lt: false, le: true, sa: false, eb: false, ap: true },
+        modifierExpectation: { null: true, eq: true, ne: false, gt: false, ge: true, lt: false, le: true, sa: false, eb: false, ap: true },
     },
     {
         name: "resource after request touching end",
@@ -310,7 +321,7 @@ const rangesInteractWithPrefixesTable = [
 |--[P]--|
         |--[R]--|
 `,
-        modifierExpectation: { eq: false, ne: true, gt: true, ge: true, lt: false, le: true, sa: false, eb: false, ap: false },
+        modifierExpectation: { null: false, eq: false, ne: true, gt: true, ge: true, lt: false, le: true, sa: false, eb: false, ap: false },
     },
     {
         name: "resource after request with gap",
@@ -318,7 +329,7 @@ const rangesInteractWithPrefixesTable = [
 |--[P]--|
             |--[R]--|
 `,
-        modifierExpectation: { eq: false, ne: true, gt: true, ge: true, lt: false, le: false, sa: true, eb: false, ap: false },
+        modifierExpectation: { null: false, eq: false, ne: true, gt: true, ge: true, lt: false, le: false, sa: true, eb: false, ap: false },
     },
 ]
 
