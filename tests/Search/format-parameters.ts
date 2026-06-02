@@ -169,7 +169,7 @@ dualMode("summary-and-total", rest, (search) => {
       const res =
         pages === 0
           ? await search("Patient", url)
-          : await fetchAbsolute(url);
+          : await rest().searchUrl(url);
       expect(res).toHaveStatus(200);
       const body = res.body as Bundle;
       runningTotal = body.total ?? runningTotal;
@@ -189,16 +189,3 @@ dualMode("summary-and-total", rest, (search) => {
     if (runningTotal !== undefined) expect(runningTotal).toBe(5);
   });
 });
-
-// `next` links come back as fully-qualified URLs. Walk them with a plain
-// fetch — they don't need to go through the impl's request helper because
-// the URL already includes the impl's base + path prefix.
-async function fetchAbsolute(url: string): Promise<{ status: number; body: unknown }> {
-  const res = await fetch(url, { headers: { Accept: "application/fhir+json" } });
-  const text = await res.text();
-  let parsed: unknown = text;
-  try {
-    parsed = text.length > 0 ? JSON.parse(text) : null;
-  } catch {}
-  return { status: res.status, body: parsed };
-}
