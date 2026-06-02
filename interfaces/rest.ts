@@ -27,4 +27,36 @@ export interface Rest {
 
   // Type-level search: GET /[type]?[query]
   search(resourceType: string, query?: string): Promise<{ status: number; body: unknown }>;
+
+  // Type-level search via POST: POST /[type]/_search with body [query]
+  // (application/x-www-form-urlencoded). Per-key URL-encoding is the
+  // caller's responsibility — body is the same `&`-separated query string
+  // as the GET form.
+  searchPost(resourceType: string, query?: string): Promise<{ status: number; body: unknown }>;
+
+  // Follow a paging link (e.g. Bundle.link[next].url). The URL may
+  // be absolute (scheme + host) or relative (path-only); either way,
+  // its path MUST target this impl's FHIR base. Impls MUST send the
+  // same headers/auth as `search`. Host/scheme are intentionally
+  // ignored to avoid testcontainers inside-vs-mapped hostname drift.
+  searchUrl(url: string): Promise<{ status: number; body: unknown }>;
+
+  // Compartment search: GET /[compartmentType]/[id]/(*|[type])?[query]
+  // resourceType "*" requests every compartment member resource type.
+  compartmentSearch(
+    compartmentType: string,
+    id: string,
+    resourceType: string | "*",
+    query?: string,
+  ): Promise<{ status: number; body: unknown }>;
+
+  // Compartment search via POST: POST /[compartmentType]/[id]/[type]/_search
+  // with body [query] (application/x-www-form-urlencoded). Note: POST form
+  // of "*"-compartment is undefined in FHIR; pass a concrete resourceType.
+  compartmentSearchPost(
+    compartmentType: string,
+    id: string,
+    resourceType: string,
+    query?: string,
+  ): Promise<{ status: number; body: unknown }>;
 }

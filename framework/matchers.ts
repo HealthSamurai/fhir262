@@ -127,6 +127,49 @@ expect.extend({
       },
     };
   },
+
+  // toHaveSelfLinkContaining asserts that the Bundle's self link contains every
+  // given query-string fragment. Fragments are checked via substring `includes`,
+  // matching how candle's `R4Tests.SelfLinkSelectsExpectedParts` validates that
+  // the server echoes every `&`-separated piece of the original query in
+  // Bundle.link[self].url.
+  toHaveSelfLinkContaining(received: Response, fragments: string[]) {
+    const body = received?.body as { link?: { relation: string; url: string }[] } | undefined;
+    const links = body?.link ?? [];
+    const self = links.find((l) => l.relation === "self");
+    if (!self) {
+      return {
+        pass: false,
+        message: () => {
+          const hint = this.utils.matcherHint("toHaveSelfLinkContaining", "received", "fragments", {
+            isNot: this.isNot,
+          });
+          return [
+            hint,
+            "",
+            `Expected: Bundle.link to include an entry with relation "self" containing ${this.utils.printExpected(fragments)}`,
+            `Received: ${this.utils.printReceived(links)}`,
+          ].join("\n");
+        },
+      };
+    }
+    const missing = fragments.filter((f) => !self.url.includes(f));
+    const pass = missing.length === 0;
+    return {
+      pass,
+      message: () => {
+        const hint = this.utils.matcherHint("toHaveSelfLinkContaining", "received", "fragments", {
+          isNot: this.isNot,
+        });
+        return [
+          hint,
+          "",
+          `Expected: self link to contain every fragment ${this.utils.printExpected(fragments)}`,
+          `Received: self link ${this.utils.printReceived(self.url)} is missing ${this.utils.printReceived(missing)}`,
+        ].join("\n");
+      },
+    };
+  },
 });
 
 declare module "expect" {
@@ -135,11 +178,13 @@ declare module "expect" {
     toBeInvalid(): void;
     toHaveStatus(expected: number): void;
     toHaveIssueWithExpression(expression: string): void;
+    toHaveSelfLinkContaining(fragments: string[]): void;
   }
   interface Matchers<R> {
     toBeValid(): R;
     toBeInvalid(): R;
     toHaveStatus(expected: number): R;
     toHaveIssueWithExpression(expression: string): R;
+    toHaveSelfLinkContaining(fragments: string[]): R;
   }
 }

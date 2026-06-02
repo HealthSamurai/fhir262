@@ -2,6 +2,9 @@ module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
   testMatch: ["<rootDir>/tests/**/*.ts"],
+  // Helper modules under tests/** that start with `_` are not test files.
+  // testMatch can't negate via `!…`; use testPathIgnorePatterns instead.
+  testPathIgnorePatterns: ["/node_modules/", "/tests/.*/_[^/]+\\.ts$"],
   reporters: ["default", "<rootDir>/framework/reporter.cjs"],
   setupFilesAfterEnv: ["<rootDir>/framework/matchers.ts"],
   rootDir: ".",

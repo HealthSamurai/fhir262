@@ -105,6 +105,25 @@ const server: Server = {
       return { status: res.status, body: parsed };
     };
 
+    const requestForm = async (path: string, formBody: string) => {
+      const tOp = Date.now();
+      const res = await fetch(`${baseUrl}${path}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Accept: "application/fhir+json",
+        },
+        body: formBody,
+      });
+      const text = await res.text();
+      log(`POST ${path} (form ${formBody.length}b) → ${res.status} in ${since(tOp)}`);
+      let parsed: unknown = text;
+      try {
+        parsed = text.length > 0 ? JSON.parse(text) : null;
+      } catch {}
+      return { status: res.status, body: parsed };
+    };
+
     const rest: Rest = {
       operation: (resourceType, operation, params) =>
         request("POST", `/${resourceType}/${operation}`, params),
@@ -116,6 +135,30 @@ const server: Server = {
       delete: (resourceType, id) => request("DELETE", `/${resourceType}/${id}`),
       search: (resourceType, query) =>
         request("GET", `/${resourceType}${query ? `?${query}` : ""}`),
+      searchPost: (resourceType, query) =>
+        requestForm(`/${resourceType}/_search`, query ?? ""),
+      searchUrl: (url) => {
+        const isAbsolute = /^https?:\/\//i.test(url);
+        if (!isAbsolute && !url.startsWith("/")) {
+          throw new Error(
+            `searchUrl: expected absolute URL or path starting with '/', got ${url}`,
+          );
+        }
+        const path = isAbsolute
+          ? (() => {
+              const u = new URL(url);
+              return `${u.pathname}${u.search}`;
+            })()
+          : url;
+        return request("GET", path);
+      },
+      compartmentSearch: (compartmentType, id, resourceType, query) =>
+        request(
+          "GET",
+          `/${compartmentType}/${id}/${resourceType}${query ? `?${query}` : ""}`,
+        ),
+      compartmentSearchPost: (compartmentType, id, resourceType, query) =>
+        requestForm(`/${compartmentType}/${id}/${resourceType}/_search`, query ?? ""),
     };
 
     return {

@@ -1,10 +1,20 @@
 import { describe, it, expect, beforeAll, afterAll } from "@jest/globals";
 import type { ServerInstance } from "../../interfaces/server";
+import type { Rest } from "../../interfaces/rest";
 import { loadImpl } from "../../framework/impl-loader";
-import { request } from "node:http";
+import {
+  IDENT_SYSTEM,
+  type Bundle,
+  idsOf,
+  createOrFail,
+  cleanup,
+  sleep,
+  dualMode,
+} from "./_helpers";
 
 const server = loadImpl().server;
 let instance: ServerInstance;
+const rest = (): Rest => instance.rest;
 
 beforeAll(async () => {
   instance = await server.startWithCoreOnly("r4");
@@ -14,46 +24,7 @@ afterAll(async () => {
   await instance.stop();
 });
 
-type Bundle = {
-  resourceType: "Bundle";
-  total?: number;
-  entry?: { resource: { id: string; resourceType: string } }[];
-  link?: { relation: string; url: string }[];
-};
-
-const idsOf = (b: unknown): string[] =>
-  ((b as Bundle).entry ?? []).map((e) => e.resource.id);
-
-const createOrFail = async (type: string, resource: unknown): Promise<string> => {
-  const res = await instance.rest.create(type, resource);
-  if (res.status !== 201) {
-    throw new Error(
-      `Expected: HTTP 201 (create ${type})\n` +
-        `Received: HTTP ${res.status}\n` +
-        `body: ${JSON.stringify(res.body, null, 2)}\n` +
-        `resource: ${JSON.stringify(resource, null, 2)}`,
-    );
-  }
-  const id = (res.body as { id?: string }).id;
-  if (!id) {
-    throw new Error(
-      `Expected: response body to include an "id" field (create ${type})\n` +
-        `Received: body without id\n` +
-        `body: ${JSON.stringify(res.body, null, 2)}`,
-    );
-  }
-  return id;
-};
-
-const cleanup = async (type: string, ids: string[]) => {
-  for (const id of ids) await instance.rest.delete(type, id);
-};
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-const IDENT_SYSTEM = "http://fhir262/test";
-
-describe("by-type-general", () => {
+dualMode("by-type-general", rest, (search) => {
   let orgId: string;
   let pA: string;
   let pB: string;
@@ -62,11 +33,11 @@ describe("by-type-general", () => {
   let pE: string;
 
   beforeAll(async () => {
-    orgId = await createOrFail("Organization", {
+    orgId = await createOrFail(instance.rest, "Organization", {
       resourceType: "Organization",
       name: "fhir262 Org",
     });
-    pA = await createOrFail("Patient", {
+    pA = await createOrFail(instance.rest, "Patient", {
       resourceType: "Patient",
       identifier: [{ system: IDENT_SYSTEM, value: "MRN-001" }],
       name: [{ family: "Smith", given: ["John"] }],
@@ -74,14 +45,14 @@ describe("by-type-general", () => {
       birthDate: "1980-01-15",
       managingOrganization: { reference: `Organization/${orgId}` },
     });
-    pB = await createOrFail("Patient", {
+    pB = await createOrFail(instance.rest, "Patient", {
       resourceType: "Patient",
       identifier: [{ system: IDENT_SYSTEM, value: "MRN-002" }],
       name: [{ family: "Jones", given: ["Jane"] }],
       gender: "female",
       birthDate: "1990-06-20",
     });
-    pC = await createOrFail("Patient", {
+    pC = await createOrFail(instance.rest, "Patient", {
       resourceType: "Patient",
       identifier: [{ system: IDENT_SYSTEM, value: "MRN-003" }],
       name: [{ family: "Smithson", given: ["Sam"] }],
@@ -89,23 +60,23 @@ describe("by-type-general", () => {
       birthDate: "2000-12-31",
     });
     // No IDENT_SYSTEM identifier on pD/pE to keep _total=accurate at 3.
-    pD = await createOrFail("Patient", {
+    pD = await createOrFail(instance.rest, "Patient", {
       resourceType: "Patient",
       name: [{ family: "Muñoz", given: ["Maria"] }],
     });
-    pE = await createOrFail("Patient", {
+    pE = await createOrFail(instance.rest, "Patient", {
       resourceType: "Patient",
       name: [{ family: "Van Helsing", given: ["Abraham"] }],
     });
   });
 
   afterAll(async () => {
-    await cleanup("Patient", [pA, pB, pC, pD, pE]);
-    await cleanup("Organization", [orgId]);
+    await cleanup(instance.rest, "Patient", [pA, pB, pC, pD, pE]);
+    await cleanup(instance.rest, "Organization", [orgId]);
   });
 
   it("token: identifier matches exact system|value", async () => {
-    const res = await instance.rest.search("Patient", `identifier=${IDENT_SYSTEM}|MRN-001`);
+    const res = await search("Patient", `identifier=${IDENT_SYSTEM}|MRN-001`);
     expect(res).toHaveStatus(200);
     const ids = idsOf(res.body);
     expect(ids).toContain(pA);
@@ -114,7 +85,7 @@ describe("by-type-general", () => {
   });
 
   it("string: family does case-insensitive prefix match", async () => {
-    const res = await instance.rest.search("Patient", "family=smi");
+    const res = await search("Patient", "family=smi");
     expect(res).toHaveStatus(200);
     const ids = idsOf(res.body);
     expect(ids).toEqual(expect.arrayContaining([pA, pC]));
@@ -122,21 +93,21 @@ describe("by-type-general", () => {
   });
 
   it("string: family is accent-insensitive", async () => {
-    const res = await instance.rest.search("Patient", "family=munoz");
+    const res = await search("Patient", "family=munoz");
     expect(res).toHaveStatus(200);
     const ids = idsOf(res.body);
     expect(ids).toContain(pD);
   });
 
   it("string: family matches only at the start (mid-string substring does not match)", async () => {
-    const res = await instance.rest.search("Patient", "family=oz");
+    const res = await search("Patient", "family=oz");
     expect(res).toHaveStatus(200);
     const ids = idsOf(res.body);
     expect(ids).not.toContain(pD);
   });
 
   it("string: family value may contain spaces", async () => {
-    const res = await instance.rest.search(
+    const res = await search(
       "Patient",
       `family=${encodeURIComponent("Van Hel")}`,
     );
@@ -147,7 +118,7 @@ describe("by-type-general", () => {
   });
 
   it("date: birthdate=ge filters earlier dates out", async () => {
-    const res = await instance.rest.search("Patient", "birthdate=ge1985-01-01");
+    const res = await search("Patient", "birthdate=ge1985-01-01");
     expect(res).toHaveStatus(200);
     const ids = idsOf(res.body);
     expect(ids).toEqual(expect.arrayContaining([pB, pC]));
@@ -155,7 +126,7 @@ describe("by-type-general", () => {
   });
 
   it("reference: organization=Organization/{id} matches the linked patient", async () => {
-    const res = await instance.rest.search("Patient", `organization=Organization/${orgId}`);
+    const res = await search("Patient", `organization=Organization/${orgId}`);
     expect(res).toHaveStatus(200);
     const ids = idsOf(res.body);
     expect(ids).toContain(pA);
@@ -164,68 +135,69 @@ describe("by-type-general", () => {
   });
 
   it("total: _total=accurate returns exact count", async () => {
-    const res = await instance.rest.search(
+    const res = await search(
       "Patient",
       `identifier=${IDENT_SYSTEM}|&_total=accurate`,
     );
     expect(res).toHaveStatus(200);
     expect((res.body as Bundle).total).toBe(3);
   });
+
 });
 
-describe("system", () => {
+dualMode("system", rest, (search) => {
   const tPast = "2000-01-01T00:00:00Z";
   const tFuture = "2999-01-01T00:00:00Z";
   let p1: string;
   let p2: string;
 
   beforeAll(async () => {
-    p1 = await createOrFail("Patient", { resourceType: "Patient", gender: "male" });
-    p2 = await createOrFail("Patient", { resourceType: "Patient", gender: "female" });
+    p1 = await createOrFail(instance.rest, "Patient", { resourceType: "Patient", gender: "male" });
+    p2 = await createOrFail(instance.rest, "Patient", { resourceType: "Patient", gender: "female" });
   });
 
   afterAll(async () => {
-    await cleanup("Patient", [p1, p2]);
+    await cleanup(instance.rest, "Patient", [p1, p2]);
   });
 
   it("_id matches a single id exactly", async () => {
-    const res = await instance.rest.search("Patient", `_id=${p1}`);
+    const res = await search("Patient", `_id=${p1}`);
     expect(res).toHaveStatus(200);
     expect(idsOf(res.body)).toEqual([p1]);
   });
 
   it("_lastUpdated=ge<past> matches both patients", async () => {
-    const res = await instance.rest.search("Patient", `_lastUpdated=ge${tPast}`);
+    const res = await search("Patient", `_lastUpdated=ge${tPast}`);
     expect(res).toHaveStatus(200);
     expect(idsOf(res.body)).toEqual(expect.arrayContaining([p1, p2]));
   });
 
   it("_lastUpdated=ge<future> matches none", async () => {
-    const res = await instance.rest.search("Patient", `_lastUpdated=ge${tFuture}`);
+    const res = await search("Patient", `_lastUpdated=ge${tFuture}`);
     expect(res).toHaveStatus(200);
     expect(idsOf(res.body)).toEqual([]);
   });
 });
 
-describe("sort", () => {
+dualMode("sort", rest, (search) => {
   let s1: string;
   let s2: string;
   let s3: string;
 
   beforeAll(async () => {
-    s1 = await createOrFail("Patient", {
+    s1 = await createOrFail(instance.rest, "Patient", {
       resourceType: "Patient",
       identifier: [{ system: IDENT_SYSTEM, value: "MRN-S1" }],
       birthDate: "1990-01-01",
     });
     await sleep(20);
-    s2 = await createOrFail("Patient", {
+    s2 = await createOrFail(instance.rest, "Patient", {
       resourceType: "Patient",
       identifier: [{ system: IDENT_SYSTEM, value: "MRN-S2" }],
       birthDate: "1980-01-01",
     });
     await sleep(20);
-    s3 = await createOrFail("Patient", {
+    s3 = await createOrFail(instance.rest, "Patient", {
       resourceType: "Patient",
       identifier: [{ system: IDENT_SYSTEM, value: "MRN-S3" }],
       birthDate: "2000-01-01",
@@ -233,11 +205,11 @@ describe("sort", () => {
   });
 
   afterAll(async () => {
-    await cleanup("Patient", [s1, s2, s3]);
+    await cleanup(instance.rest, "Patient", [s1, s2, s3]);
   });
 
   it("_sort=birthdate sorts ascending", async () => {
-    const res = await instance.rest.search(
+    const res = await search(
       "Patient",
       `identifier=${IDENT_SYSTEM}|&_sort=birthdate`,
     );
@@ -246,7 +218,7 @@ describe("sort", () => {
   });
 
   it("_sort=-birthdate sorts descending", async () => {
-    const res = await instance.rest.search(
+    const res = await search(
       "Patient",
       `identifier=${IDENT_SYSTEM}|&_sort=-birthdate`,
     );
@@ -255,7 +227,7 @@ describe("sort", () => {
   });
 
   it("_sort=-_lastUpdated sorts by a system search param", async () => {
-    const res = await instance.rest.search(
+    const res = await search(
       "Patient",
       `identifier=${IDENT_SYSTEM}|&_sort=-_lastUpdated`,
     );
@@ -264,12 +236,12 @@ describe("sort", () => {
   });
 });
 
-describe("paging", () => {
+dualMode("paging", rest, (search) => {
   const ids: string[] = [];
 
   beforeAll(async () => {
     for (let i = 1; i <= 5; i++) {
-      const id = await createOrFail("Patient", {
+      const id = await createOrFail(instance.rest, "Patient", {
         resourceType: "Patient",
         identifier: [{ system: IDENT_SYSTEM, value: `P-${i}` }],
       });
@@ -278,11 +250,11 @@ describe("paging", () => {
   });
 
   afterAll(async () => {
-    await cleanup("Patient", ids);
+    await cleanup(instance.rest, "Patient", ids);
   });
 
   it("_count=2 returns at most 2 entries and a next link", async () => {
-    const res = await instance.rest.search(
+    const res = await search(
       "Patient",
       `identifier=${IDENT_SYSTEM}|&_count=2`,
     );
@@ -292,7 +264,7 @@ describe("paging", () => {
 
 });
 
-describe("joins-and-or", () => {
+dualMode("joins-and-or", rest, (search) => {
   let pAB: string;
   let pA: string;
   let pB: string;
@@ -303,25 +275,25 @@ describe("joins-and-or", () => {
   let aF: string;
 
   beforeAll(async () => {
-    pAB = await createOrFail("Patient", {
+    pAB = await createOrFail(instance.rest, "Patient", {
       resourceType: "Patient",
       identifier: [{ system: IDENT_SYSTEM, value: "JOIN-1" }],
       name: [{ family: "Smith", given: ["Alex", "Bob"] }],
       birthDate: "1985-06-15",
     });
-    pA = await createOrFail("Patient", {
+    pA = await createOrFail(instance.rest, "Patient", {
       resourceType: "Patient",
       identifier: [{ system: IDENT_SYSTEM, value: "JOIN-2" }],
       name: [{ family: "Doe", given: ["Alex"] }],
       birthDate: "2010-03-01",
     });
-    pB = await createOrFail("Patient", {
+    pB = await createOrFail(instance.rest, "Patient", {
       resourceType: "Patient",
       identifier: [{ system: IDENT_SYSTEM, value: "JOIN-3" }],
       name: [{ family: "Doe", given: ["Bob"] }],
       birthDate: "1970-01-01",
     });
-    pC = await createOrFail("Patient", {
+    pC = await createOrFail(instance.rest, "Patient", {
       resourceType: "Patient",
       identifier: [{ system: IDENT_SYSTEM, value: "JOIN-4" }],
       name: [{ family: "Smith", given: ["Carol"] }],
@@ -342,19 +314,19 @@ describe("joins-and-or", () => {
         ],
       },
     });
-    aMB = await createOrFail("AllergyIntolerance", allergy("JOIN-A1", ["medication", "biologic"]));
-    aM = await createOrFail("AllergyIntolerance", allergy("JOIN-A2", ["medication"]));
-    aB = await createOrFail("AllergyIntolerance", allergy("JOIN-A3", ["biologic"]));
-    aF = await createOrFail("AllergyIntolerance", allergy("JOIN-A4", ["food"]));
+    aMB = await createOrFail(instance.rest, "AllergyIntolerance", allergy("JOIN-A1", ["medication", "biologic"]));
+    aM = await createOrFail(instance.rest, "AllergyIntolerance", allergy("JOIN-A2", ["medication"]));
+    aB = await createOrFail(instance.rest, "AllergyIntolerance", allergy("JOIN-A3", ["biologic"]));
+    aF = await createOrFail(instance.rest, "AllergyIntolerance", allergy("JOIN-A4", ["food"]));
   });
 
   afterAll(async () => {
-    await cleanup("AllergyIntolerance", [aMB, aM, aB, aF]);
-    await cleanup("Patient", [pAB, pA, pB, pC]);
+    await cleanup(instance.rest, "AllergyIntolerance", [aMB, aM, aB, aF]);
+    await cleanup(instance.rest, "Patient", [pAB, pA, pB, pC]);
   });
 
   it("AND across params: given + family must both match", async () => {
-    const res = await instance.rest.search("Patient", "given=Alex&family=Doe");
+    const res = await search("Patient", "given=Alex&family=Doe");
     expect(res).toHaveStatus(200);
     const ids = idsOf(res.body);
     expect(ids).toContain(pA);
@@ -364,7 +336,7 @@ describe("joins-and-or", () => {
   });
 
   it("AND repeated on scalar-simple: birthdate range narrows to inside the range", async () => {
-    const res = await instance.rest.search(
+    const res = await search(
       "Patient",
       "birthdate=ge1980-01-01&birthdate=lt2000-01-01",
     );
@@ -377,7 +349,7 @@ describe("joins-and-or", () => {
   });
 
   it("AND repeated on array-simple: category=medication&category=biologic requires both", async () => {
-    const res = await instance.rest.search(
+    const res = await search(
       "AllergyIntolerance",
       "category=medication&category=biologic",
     );
@@ -390,7 +362,7 @@ describe("joins-and-or", () => {
   });
 
   it("AND repeated on array-complex: name=Alex&name=Smith spans given + family", async () => {
-    const res = await instance.rest.search("Patient", "name=Alex&name=Smith");
+    const res = await search("Patient", "name=Alex&name=Smith");
     expect(res).toHaveStatus(200);
     const ids = idsOf(res.body);
     expect(ids).toContain(pAB);
@@ -400,7 +372,7 @@ describe("joins-and-or", () => {
   });
 
   it("OR via comma on array-complex: given=Alex,Carol", async () => {
-    const res = await instance.rest.search("Patient", "given=Alex,Carol");
+    const res = await search("Patient", "given=Alex,Carol");
     expect(res).toHaveStatus(200);
     const ids = idsOf(res.body);
     expect(ids).toEqual(expect.arrayContaining([pAB, pA, pC]));
@@ -408,7 +380,7 @@ describe("joins-and-or", () => {
   });
 
   it("OR with prefix per value: birthdate outside [1975, 2005)", async () => {
-    const res = await instance.rest.search(
+    const res = await search(
       "Patient",
       "birthdate=ge2005-01-01,lt1975-01-01",
     );
@@ -420,7 +392,7 @@ describe("joins-and-or", () => {
   });
 
   it("OR with modifier applies to each value: given:exact=Alex,Carol", async () => {
-    const res = await instance.rest.search("Patient", "given:exact=Alex,Carol");
+    const res = await search("Patient", "given:exact=Alex,Carol");
     expect(res).toHaveStatus(200);
     const ids = idsOf(res.body);
     expect(ids).toEqual(expect.arrayContaining([pAB, pA, pC]));
@@ -428,7 +400,7 @@ describe("joins-and-or", () => {
   });
 
   it("OR on array-simple: category=medication,biologic", async () => {
-    const res = await instance.rest.search(
+    const res = await search(
       "AllergyIntolerance",
       "category=medication,biologic",
     );
@@ -439,14 +411,14 @@ describe("joins-and-or", () => {
   });
 
   it("OR on array-complex via name parameter: name=Doe,Smith", async () => {
-    const res = await instance.rest.search("Patient", "name=Doe,Smith");
+    const res = await search("Patient", "name=Doe,Smith");
     expect(res).toHaveStatus(200);
     const ids = idsOf(res.body);
     expect(ids).toEqual(expect.arrayContaining([pAB, pA, pB, pC]));
   });
 
   it("MIX: AND between params with OR within one — given=Alex,Bob & family=Smith", async () => {
-    const res = await instance.rest.search("Patient", "given=Alex,Bob&family=Smith");
+    const res = await search("Patient", "given=Alex,Bob&family=Smith");
     expect(res).toHaveStatus(200);
     const ids = idsOf(res.body);
     expect(ids).toContain(pAB);
@@ -456,24 +428,24 @@ describe("joins-and-or", () => {
   });
 });
 
-describe("modifiers", () => {
+dualMode("modifiers", rest, (search) => {
   describe("exact (string)", () => {
     let pS: string;
     let pSn: string;
     let psm: string;
 
     beforeAll(async () => {
-      pS = await createOrFail("Patient", {
+      pS = await createOrFail(instance.rest, "Patient", {
         resourceType: "Patient",
         identifier: [{ system: IDENT_SYSTEM, value: "EX-1" }],
         name: [{ family: "Smith" }],
       });
-      pSn = await createOrFail("Patient", {
+      pSn = await createOrFail(instance.rest, "Patient", {
         resourceType: "Patient",
         identifier: [{ system: IDENT_SYSTEM, value: "EX-2" }],
         name: [{ family: "Smithson" }],
       });
-      psm = await createOrFail("Patient", {
+      psm = await createOrFail(instance.rest, "Patient", {
         resourceType: "Patient",
         identifier: [{ system: IDENT_SYSTEM, value: "EX-3" }],
         name: [{ family: "smith" }],
@@ -481,11 +453,11 @@ describe("modifiers", () => {
     });
 
     afterAll(async () => {
-      await cleanup("Patient", [pS, pSn, psm]);
+      await cleanup(instance.rest, "Patient", [pS, pSn, psm]);
     });
 
     it("family:exact=Smith requires full-string and matching case", async () => {
-      const res = await instance.rest.search("Patient", "family:exact=Smith");
+      const res = await search("Patient", "family:exact=Smith");
       expect(res).toHaveStatus(200);
       const ids = idsOf(res.body);
       expect(ids).toContain(pS);
@@ -494,7 +466,7 @@ describe("modifiers", () => {
     });
 
     it("family:exact=smith matches only the lowercase-stored value", async () => {
-      const res = await instance.rest.search("Patient", "family:exact=smith");
+      const res = await search("Patient", "family:exact=smith");
       expect(res).toHaveStatus(200);
       const ids = idsOf(res.body);
       expect(ids).toContain(psm);
@@ -512,32 +484,32 @@ describe("modifiers", () => {
     let vsEx: string;
 
     beforeAll(async () => {
-      pAnd = await createOrFail("Patient", {
+      pAnd = await createOrFail(instance.rest, "Patient", {
         resourceType: "Patient",
         identifier: [{ system: IDENT_SYSTEM, value: "CT-1" }],
         name: [{ family: "Anderson" }],
       });
-      pSon = await createOrFail("Patient", {
+      pSon = await createOrFail(instance.rest, "Patient", {
         resourceType: "Patient",
         identifier: [{ system: IDENT_SYSTEM, value: "CT-2" }],
         name: [{ family: "Sonder" }],
       });
-      pSam = await createOrFail("Patient", {
+      pSam = await createOrFail(instance.rest, "Patient", {
         resourceType: "Patient",
         identifier: [{ system: IDENT_SYSTEM, value: "CT-3" }],
         name: [{ family: "Samsonite" }],
       });
-      pBr = await createOrFail("Patient", {
+      pBr = await createOrFail(instance.rest, "Patient", {
         resourceType: "Patient",
         identifier: [{ system: IDENT_SYSTEM, value: "CT-4" }],
         name: [{ family: "Brown" }],
       });
-      vsAcme = await createOrFail("ValueSet", {
+      vsAcme = await createOrFail(instance.rest, "ValueSet", {
         resourceType: "ValueSet",
         url: "http://acme.org/fhir/ValueSet/foo",
         status: "active",
       });
-      vsEx = await createOrFail("ValueSet", {
+      vsEx = await createOrFail(instance.rest, "ValueSet", {
         resourceType: "ValueSet",
         url: "http://example.org/fhir/ValueSet/bar",
         status: "active",
@@ -545,12 +517,12 @@ describe("modifiers", () => {
     });
 
     afterAll(async () => {
-      await cleanup("Patient", [pAnd, pSon, pSam, pBr]);
-      await cleanup("ValueSet", [vsAcme, vsEx]);
+      await cleanup(instance.rest, "Patient", [pAnd, pSon, pSam, pBr]);
+      await cleanup(instance.rest, "ValueSet", [vsAcme, vsEx]);
     });
 
     it("family:contains=son matches substring anywhere (Anderson, Sonder, Samsonite)", async () => {
-      const res = await instance.rest.search("Patient", "family:contains=son");
+      const res = await search("Patient", "family:contains=son");
       expect(res).toHaveStatus(200);
       const ids = idsOf(res.body);
       expect(ids).toEqual(expect.arrayContaining([pAnd, pSon, pSam]));
@@ -558,7 +530,7 @@ describe("modifiers", () => {
     });
 
     it("family:contains=SON is case-insensitive", async () => {
-      const res = await instance.rest.search("Patient", "family:contains=SON");
+      const res = await search("Patient", "family:contains=SON");
       expect(res).toHaveStatus(200);
       const ids = idsOf(res.body);
       expect(ids).toEqual(expect.arrayContaining([pAnd, pSon, pSam]));
@@ -566,7 +538,7 @@ describe("modifiers", () => {
     });
 
     it("url:contains=acme matches a URI substring on ValueSet", async () => {
-      const res = await instance.rest.search("ValueSet", "url:contains=acme");
+      const res = await search("ValueSet", "url:contains=acme");
       expect(res).toHaveStatus(200);
       const ids = idsOf(res.body);
       expect(ids).toContain(vsAcme);
@@ -579,24 +551,24 @@ describe("modifiers", () => {
     let pEmpty: string;
 
     beforeAll(async () => {
-      pFull = await createOrFail("Patient", {
+      pFull = await createOrFail(instance.rest, "Patient", {
         resourceType: "Patient",
         identifier: [{ system: IDENT_SYSTEM, value: "MI-1" }],
         gender: "male",
         birthDate: "1980-01-01",
       });
-      pEmpty = await createOrFail("Patient", {
+      pEmpty = await createOrFail(instance.rest, "Patient", {
         resourceType: "Patient",
         identifier: [{ system: IDENT_SYSTEM, value: "MI-2" }],
       });
     });
 
     afterAll(async () => {
-      await cleanup("Patient", [pFull, pEmpty]);
+      await cleanup(instance.rest, "Patient", [pFull, pEmpty]);
     });
 
     it("gender:missing=true matches records without gender", async () => {
-      const res = await instance.rest.search("Patient", "gender:missing=true");
+      const res = await search("Patient", "gender:missing=true");
       expect(res).toHaveStatus(200);
       const ids = idsOf(res.body);
       expect(ids).toContain(pEmpty);
@@ -604,7 +576,7 @@ describe("modifiers", () => {
     });
 
     it("gender:missing=false matches records with gender", async () => {
-      const res = await instance.rest.search("Patient", "gender:missing=false");
+      const res = await search("Patient", "gender:missing=false");
       expect(res).toHaveStatus(200);
       const ids = idsOf(res.body);
       expect(ids).toContain(pFull);
@@ -612,7 +584,7 @@ describe("modifiers", () => {
     });
 
     it("birthdate:missing=true matches records without birthDate", async () => {
-      const res = await instance.rest.search("Patient", "birthdate:missing=true");
+      const res = await search("Patient", "birthdate:missing=true");
       expect(res).toHaveStatus(200);
       const ids = idsOf(res.body);
       expect(ids).toContain(pEmpty);
@@ -620,7 +592,7 @@ describe("modifiers", () => {
     });
 
     it("birthdate:missing=false matches records with birthDate", async () => {
-      const res = await instance.rest.search("Patient", "birthdate:missing=false");
+      const res = await search("Patient", "birthdate:missing=false");
       expect(res).toHaveStatus(200);
       const ids = idsOf(res.body);
       expect(ids).toContain(pFull);
@@ -635,33 +607,33 @@ describe("modifiers", () => {
     let pNone: string;
 
     beforeAll(async () => {
-      pMale = await createOrFail("Patient", {
+      pMale = await createOrFail(instance.rest, "Patient", {
         resourceType: "Patient",
         identifier: [{ system: IDENT_SYSTEM, value: "NT-1" }],
         gender: "male",
       });
-      pFem = await createOrFail("Patient", {
+      pFem = await createOrFail(instance.rest, "Patient", {
         resourceType: "Patient",
         identifier: [{ system: IDENT_SYSTEM, value: "NT-2" }],
         gender: "female",
       });
-      pOth = await createOrFail("Patient", {
+      pOth = await createOrFail(instance.rest, "Patient", {
         resourceType: "Patient",
         identifier: [{ system: IDENT_SYSTEM, value: "NT-3" }],
         gender: "other",
       });
-      pNone = await createOrFail("Patient", {
+      pNone = await createOrFail(instance.rest, "Patient", {
         resourceType: "Patient",
         identifier: [{ system: IDENT_SYSTEM, value: "NT-4" }],
       });
     });
 
     afterAll(async () => {
-      await cleanup("Patient", [pMale, pFem, pOth, pNone]);
+      await cleanup(instance.rest, "Patient", [pMale, pFem, pOth, pNone]);
     });
 
     it("gender:not=male excludes male and INCLUDES records with no gender", async () => {
-      const res = await instance.rest.search("Patient", "gender:not=male");
+      const res = await search("Patient", "gender:not=male");
       expect(res).toHaveStatus(200);
       const ids = idsOf(res.body);
       expect(ids).toEqual(expect.arrayContaining([pFem, pOth, pNone]));
@@ -676,7 +648,7 @@ describe("modifiers", () => {
     let pMRX: string;
 
     beforeAll(async () => {
-      pMR = await createOrFail("Patient", {
+      pMR = await createOrFail(instance.rest, "Patient", {
         resourceType: "Patient",
         identifier: [
           { system: IDENT_SYSTEM, value: "OT-1" },
@@ -686,7 +658,7 @@ describe("modifiers", () => {
           },
         ],
       });
-      pMRT = await createOrFail("Patient", {
+      pMRT = await createOrFail(instance.rest, "Patient", {
         resourceType: "Patient",
         identifier: [
           { system: IDENT_SYSTEM, value: "OT-2" },
@@ -696,7 +668,7 @@ describe("modifiers", () => {
           },
         ],
       });
-      pMRX = await createOrFail("Patient", {
+      pMRX = await createOrFail(instance.rest, "Patient", {
         resourceType: "Patient",
         identifier: [
           { system: IDENT_SYSTEM, value: "OT-3" },
@@ -709,11 +681,11 @@ describe("modifiers", () => {
     });
 
     afterAll(async () => {
-      await cleanup("Patient", [pMR, pMRT, pMRX]);
+      await cleanup(instance.rest, "Patient", [pMR, pMRT, pMRX]);
     });
 
     it("full system|code|value match", async () => {
-      const res = await instance.rest.search(
+      const res = await search(
         "Patient",
         `identifier:of-type=${V2_0203}|MR|12345`,
       );
@@ -725,7 +697,7 @@ describe("modifiers", () => {
     });
 
     it("different code does not match", async () => {
-      const res = await instance.rest.search(
+      const res = await search(
         "Patient",
         `identifier:of-type=${V2_0203}|MRT|12345`,
       );
@@ -737,7 +709,7 @@ describe("modifiers", () => {
     });
 
     it("different value does not match", async () => {
-      const res = await instance.rest.search(
+      const res = await search(
         "Patient",
         `identifier:of-type=${V2_0203}|MR|99999`,
       );
