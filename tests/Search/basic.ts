@@ -171,6 +171,13 @@ describe("by-type-general", () => {
     expect(res).toHaveStatus(200);
     expect((res.body as Bundle).total).toBe(3);
   });
+
+  it("POST _search: returns a Bundle matching the form-encoded query", async () => {
+    const res = await instance.rest.searchPost("Patient", `_id=${pA}`);
+    expect(res).toHaveStatus(200);
+    expect((res.body as Bundle).resourceType).toBe("Bundle");
+    expect(idsOf(res.body)).toEqual([pA]);
+  });
 });
 
 describe("system", () => {

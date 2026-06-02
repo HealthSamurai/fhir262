@@ -27,4 +27,10 @@ export interface Rest {
 
   // Type-level search: GET /[type]?[query]
   search(resourceType: string, query?: string): Promise<{ status: number; body: unknown }>;
+
+  // Type-level search via POST: POST /[type]/_search with body [query]
+  // (application/x-www-form-urlencoded). Per-key URL-encoding is the
+  // caller's responsibility — body is the same `&`-separated query string
+  // as the GET form.
+  searchPost(resourceType: string, query?: string): Promise<{ status: number; body: unknown }>;
 }

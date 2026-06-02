@@ -105,6 +105,25 @@ const server: Server = {
       return { status: res.status, body: parsed };
     };
 
+    const requestForm = async (path: string, formBody: string) => {
+      const tOp = Date.now();
+      const res = await fetch(`${baseUrl}${path}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Accept: "application/fhir+json",
+        },
+        body: formBody,
+      });
+      const text = await res.text();
+      log(`POST ${path} (form ${formBody.length}b) → ${res.status} in ${since(tOp)}`);
+      let parsed: unknown = text;
+      try {
+        parsed = text.length > 0 ? JSON.parse(text) : null;
+      } catch {}
+      return { status: res.status, body: parsed };
+    };
+
     const rest: Rest = {
       operation: (resourceType, operation, params) =>
         request("POST", `/${resourceType}/${operation}`, params),
@@ -116,6 +135,8 @@ const server: Server = {
       delete: (resourceType, id) => request("DELETE", `/${resourceType}/${id}`),
       search: (resourceType, query) =>
         request("GET", `/${resourceType}${query ? `?${query}` : ""}`),
+      searchPost: (resourceType, query) =>
+        requestForm(`/${resourceType}/_search`, query ?? ""),
     };
 
     return {
