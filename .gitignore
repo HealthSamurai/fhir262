@@ -24,3 +24,6 @@ gh-pages-tmp/
 
 # Claude (local, machine-specific)
 .claude/settings.local.json
+
+temp/
+scratch/
