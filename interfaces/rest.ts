@@ -33,4 +33,23 @@ export interface Rest {
   // caller's responsibility — body is the same `&`-separated query string
   // as the GET form.
   searchPost(resourceType: string, query?: string): Promise<{ status: number; body: unknown }>;
+
+  // Compartment search: GET /[compartmentType]/[id]/(*|[type])?[query]
+  // resourceType "*" requests every compartment member resource type.
+  compartmentSearch(
+    compartmentType: string,
+    id: string,
+    resourceType: string | "*",
+    query?: string,
+  ): Promise<{ status: number; body: unknown }>;
+
+  // Compartment search via POST: POST /[compartmentType]/[id]/[type]/_search
+  // with body [query] (application/x-www-form-urlencoded). Note: POST form
+  // of "*"-compartment is undefined in FHIR; pass a concrete resourceType.
+  compartmentSearchPost(
+    compartmentType: string,
+    id: string,
+    resourceType: string,
+    query?: string,
+  ): Promise<{ status: number; body: unknown }>;
 }

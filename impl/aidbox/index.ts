@@ -136,6 +136,13 @@ const server: Server = {
         request("GET", `/${resourceType}${query ? `?${query}` : ""}`),
       searchPost: (resourceType, query) =>
         requestForm(`/${resourceType}/_search`, query ?? ""),
+      compartmentSearch: (compartmentType, id, resourceType, query) =>
+        request(
+          "GET",
+          `/${compartmentType}/${id}/${resourceType}${query ? `?${query}` : ""}`,
+        ),
+      compartmentSearchPost: (compartmentType, id, resourceType, query) =>
+        requestForm(`/${compartmentType}/${id}/${resourceType}/_search`, query ?? ""),
     };
 
     return {
