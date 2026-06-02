@@ -173,6 +173,28 @@ const server: Server = {
         request("GET", `/${resourceType}${query ? `?${query}` : ""}`),
       searchPost: (resourceType, query) =>
         requestForm(`/${resourceType}/_search`, query ?? ""),
+      searchUrl: (url) => {
+        const isAbsolute = /^https?:\/\//i.test(url);
+        const path = isAbsolute
+          ? (() => {
+              const u = new URL(url);
+              return `${u.pathname}${u.search}`;
+            })()
+          : url.startsWith("/")
+            ? url
+            : `/${url}`;
+        const prefix = "/fhir/R4";
+        if (
+          path !== prefix &&
+          !path.startsWith(`${prefix}/`) &&
+          !path.startsWith(`${prefix}?`)
+        ) {
+          throw new Error(
+            `searchUrl: unexpected next-link path ${path} (expected to start with ${prefix})`,
+          );
+        }
+        return request("GET", path.slice(prefix.length));
+      },
       compartmentSearch: (compartmentType, id, resourceType, query) =>
         request(
           "GET",

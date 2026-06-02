@@ -137,6 +137,21 @@ const server: Server = {
         request("GET", `/${resourceType}${query ? `?${query}` : ""}`),
       searchPost: (resourceType, query) =>
         requestForm(`/${resourceType}/_search`, query ?? ""),
+      searchUrl: (url) => {
+        const isAbsolute = /^https?:\/\//i.test(url);
+        if (!isAbsolute && !url.startsWith("/")) {
+          throw new Error(
+            `searchUrl: expected absolute URL or path starting with '/', got ${url}`,
+          );
+        }
+        const path = isAbsolute
+          ? (() => {
+              const u = new URL(url);
+              return `${u.pathname}${u.search}`;
+            })()
+          : url;
+        return request("GET", path);
+      },
       compartmentSearch: (compartmentType, id, resourceType, query) =>
         request(
           "GET",
