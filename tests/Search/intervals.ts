@@ -1,6 +1,7 @@
 import { describe, it, beforeAll, afterAll } from "@jest/globals";
 import type { ServerInstance } from "../../interfaces/server";
 import { loadImpl } from "../../framework/impl-loader";
+import { idsOf, cleanup } from "./_helpers";
 
 const server = loadImpl().server;
 let instance: ServerInstance;
@@ -12,18 +13,6 @@ beforeAll(async () => {
 afterAll(async () => {
   await instance.stop();
 });
-
-type Bundle = {
-  resourceType: "Bundle";
-  entry?: { resource: { id: string; resourceType: string } }[];
-};
-
-const idsOf = (b: unknown): string[] =>
-  ((b as Bundle).entry ?? []).map((e) => e.resource.id);
-
-const cleanup = async (type: string, ids: string[]) => {
-  for (const id of ids) await instance.rest.delete(type, id);
-};
 
 type ResourceRange =
   | { name: string; type: "date" | "dateTime" | "instant"; value: string }
@@ -653,84 +642,94 @@ describe("search prefix matrix — range × modifier", () => {
           });
 
           afterAll(async () => {
-            await cleanup(testCase.resource, expectedIds);
+            await cleanup(instance.rest, testCase.resource, expectedIds);
           });
 
-          Object.entries(rangeCase.modifierExpectation).forEach(([modifier, shouldMatch]) => {
-            const prefixLabel = modifier === "null" ? "(no prefix)" : modifier;
-            const expectLabel = shouldMatch ? "match all" : "match none";
-            const prefix = modifier === "null" ? "" : modifier;
+          // Run every it() in this test case twice — once via GET, once via
+          // POST _search. Seeding stays outside the loop (plan §6.2): the
+          // fixture cost dominates and is shared across modes.
+          describe.each([{ name: "GET" as const }, { name: "POST" as const }])(
+            "$name",
+            ({ name }) => {
+              const search = (t: string, q?: string) =>
+                name === "GET" ? instance.rest.search(t, q) : instance.rest.searchPost(t, q);
 
-            describe(`${prefixLabel} → ${expectLabel}`, () => {
-              (testCase.requests as { name: string; value: string }[]).forEach((req) => {
-                const query = `${testCase.sp}=${prefix}${req.value}`;
-                it(query, async () => {
-                  const res = await instance.rest.search(testCase.resource, query);
+              Object.entries(rangeCase.modifierExpectation).forEach(([modifier, shouldMatch]) => {
+                const prefixLabel = modifier === "null" ? "(no prefix)" : modifier;
+                const expectLabel = shouldMatch ? "match all" : "match none";
+                const prefix = modifier === "null" ? "" : modifier;
 
-                  const contextBlock =
-                    `range: ${rangeCase.name}\n` +
-                    `${rangeCase.rangeVisual.replace(/^\n|\n$/g, "")}\n` +
-                    `test: ${testCase.name}`;
+                describe(`${prefixLabel} → ${expectLabel}`, () => {
+                  (testCase.requests as { name: string; value: string }[]).forEach((req) => {
+                    const query = `${testCase.sp}=${prefix}${req.value}`;
+                    it(query, async () => {
+                      const res = await search(testCase.resource, query);
 
-                  if (res.status !== 200) {
-                    throw new Error(
-                      `Expected: HTTP 200 for query ${query}\n` +
-                        `Received:\n` +
-                        `${contextBlock}\n\n` +
-                        `search failed with HTTP ${res.status} for query ${query}:\n` +
-                        `${JSON.stringify(res.body, null, 2)}`,
-                    );
-                  }
+                      const contextBlock =
+                        `range: ${rangeCase.name}\n` +
+                        `${rangeCase.rangeVisual.replace(/^\n|\n$/g, "")}\n` +
+                        `test: ${testCase.name}`;
 
-                  const matched = idsOf(res.body).filter((id) => expectedIds.includes(id));
+                      if (res.status !== 200) {
+                        throw new Error(
+                          `Expected: HTTP 200 for query ${query}\n` +
+                            `Received:\n` +
+                            `${contextBlock}\n\n` +
+                            `search failed with HTTP ${res.status} for query ${query}:\n` +
+                            `${JSON.stringify(res.body, null, 2)}`,
+                        );
+                      }
 
-                  const rangesById = new Map(
-                    (testCase.resourceRanges as ResourceRange[]).map((r) => [r.name, r]),
-                  );
-                  const formatResources = (ids: string[]): string => {
-                    const maxLines = 25;
-                    const out: string[] = [];
-                    let i = 0;
-                    for (; i < ids.length; i++) {
-                      const range = rangesById.get(ids[i]);
-                      if (!range) continue;
-                      const resource = { id: ids[i], ...(testCase.resourceTemplate(range) as object) };
-                      const block = JSON.stringify(resource, null, 2).split("\n");
-                      if (out.length + block.length + (out.length ? 1 : 0) > maxLines) break;
-                      if (out.length) out.push("");
-                      out.push(...block);
-                    }
-                    if (i < ids.length) {
-                      out.push(`... (${ids.length - i} more resources, output truncated)`);
-                    }
-                    return out.join("\n");
-                  };
+                      const matched = idsOf(res.body).filter((id) => expectedIds.includes(id));
 
-                  if (shouldMatch) {
-                    const missing = expectedIds.filter((id) => !matched.includes(id));
-                    if (missing.length > 0) {
-                      throw new Error(
-                        `Expected: all ${expectedIds.length} resources to match query ${query}\n` +
-                          `Received:\n` +
-                          `${contextBlock}\n\n` +
-                          `${matched.length}/${expectedIds.length} matched for query ${query}, missing ${missing.length}:\n` +
-                          `${formatResources(missing)}`,
+                      const rangesById = new Map(
+                        (testCase.resourceRanges as ResourceRange[]).map((r) => [r.name, r]),
                       );
-                    }
-                  } else {
-                    if (matched.length > 0) {
-                      throw new Error(
-                        `Expected: 0 resources to match query ${query}\n` +
-                          `Received:\n` +
-                          `${contextBlock}\n\n` +
-                          `${matched.length} matched for query ${query}, expected none:\n` +
-                          `${formatResources(matched)}`,
-                      );
-                    }
-                  }
+                      const formatResources = (ids: string[]): string => {
+                        const maxLines = 25;
+                        const out: string[] = [];
+                        let i = 0;
+                        for (; i < ids.length; i++) {
+                          const range = rangesById.get(ids[i]);
+                          if (!range) continue;
+                          const resource = { id: ids[i], ...(testCase.resourceTemplate(range) as object) };
+                          const block = JSON.stringify(resource, null, 2).split("\n");
+                          if (out.length + block.length + (out.length ? 1 : 0) > maxLines) break;
+                          if (out.length) out.push("");
+                          out.push(...block);
+                        }
+                        if (i < ids.length) {
+                          out.push(`... (${ids.length - i} more resources, output truncated)`);
+                        }
+                        return out.join("\n");
+                      };
+
+                      if (shouldMatch) {
+                        const missing = expectedIds.filter((id) => !matched.includes(id));
+                        if (missing.length > 0) {
+                          throw new Error(
+                            `Expected: all ${expectedIds.length} resources to match query ${query}\n` +
+                              `Received:\n` +
+                              `${contextBlock}\n\n` +
+                              `${matched.length}/${expectedIds.length} matched for query ${query}, missing ${missing.length}:\n` +
+                              `${formatResources(missing)}`,
+                          );
+                        }
+                      } else {
+                        if (matched.length > 0) {
+                          throw new Error(
+                            `Expected: 0 resources to match query ${query}\n` +
+                              `Received:\n` +
+                              `${contextBlock}\n\n` +
+                              `${matched.length} matched for query ${query}, expected none:\n` +
+                              `${formatResources(matched)}`,
+                          );
+                        }
+                      }
+                    });
+                  });
                 });
               });
-            });
           });
         });
       });
