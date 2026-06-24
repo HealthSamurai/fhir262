@@ -1,20 +1,20 @@
 import { afterAll, beforeAll, describe, expect, it } from "@jest/globals";
 import { loadImpl } from "../../framework/impl-loader";
-import type { ServerInstance } from "../../interfaces/server";
+import type { ServerConnection } from "../../interfaces/server";
 
 const server = loadImpl().server;
-let instance: ServerInstance;
+let connection: ServerConnection;
 
 beforeAll(async () => {
-  instance = await server.startWithCoreOnly("r4");
+  connection = await server.connect({ fhirVersion: "r4" });
 });
 
 afterAll(async () => {
-  await instance.stop();
+  await connection.close();
 });
 
 async function validatePatient(body: object) {
-  return instance.rest.operation("Patient", "$validate", {
+  return connection.rest.operation("Patient", "$validate", {
     resourceType: "Patient",
     ...body,
   });

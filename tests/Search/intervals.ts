@@ -1,16 +1,16 @@
 import { describe, it, beforeAll, afterAll } from "@jest/globals";
-import type { ServerInstance } from "../../interfaces/server";
+import type { ServerConnection } from "../../interfaces/server";
 import { loadImpl } from "../../framework/impl-loader";
 
 const server = loadImpl().server;
-let instance: ServerInstance;
+let connection: ServerConnection;
 
 beforeAll(async () => {
-  instance = await server.startWithCoreOnly("r4");
+  connection = await server.connect({ fhirVersion: "r4" });
 });
 
 afterAll(async () => {
-  await instance.stop();
+  await connection.close();
 });
 
 type Bundle = {
@@ -22,7 +22,7 @@ const idsOf = (b: unknown): string[] =>
   ((b as Bundle).entry ?? []).map((e) => e.resource.id);
 
 const cleanup = async (type: string, ids: string[]) => {
-  for (const id of ids) await instance.rest.delete(type, id);
+  for (const id of ids) await connection.rest.delete(type, id);
 };
 
 type ResourceRange =
@@ -638,7 +638,7 @@ describe("search prefix matrix — range × modifier", () => {
           beforeAll(async () => {
             for (const range of testCase.resourceRanges as ResourceRange[]) {
               const resource = { id: range.name, ...(testCase.resourceTemplate(range) as object) };
-              const res = await instance.rest.update(testCase.resource, range.name, resource);
+              const res = await connection.rest.update(testCase.resource, range.name, resource);
               if (res.status !== 200 && res.status !== 201) {
                 throw new Error(
                   `Expected: HTTP 200 or 201 (PUT ${testCase.resource}/${range.name})\n` +
@@ -665,7 +665,7 @@ describe("search prefix matrix — range × modifier", () => {
               (testCase.requests as { name: string; value: string }[]).forEach((req) => {
                 const query = `${testCase.sp}=${prefix}${req.value}`;
                 it(query, async () => {
-                  const res = await instance.rest.search(testCase.resource, query);
+                  const res = await connection.rest.search(testCase.resource, query);
 
                   const contextBlock =
                     `range: ${rangeCase.name}\n` +

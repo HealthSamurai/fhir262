@@ -22,8 +22,8 @@ bun bin/run.ts -impl impl/aidbox/index.ts -out report.json    # also write a JSO
 with it, `framework/reporter.cjs` writes a JSON report.
 
 The Aidbox impl needs `AIDBOX_LICENSE` set in `.env` (gitignored; see
-`.env.example`). Docker must be running — the impl spins up a fresh
-postgres + aidboxone pair per test file via testcontainers.
+`.env.example`). Docker must be running — the impl spins up a single
+postgres + aidboxone pair once per run (in jest's globalSetup) via testcontainers.
 
 ## Layout
 
@@ -44,11 +44,13 @@ fhir262/
 │   └── msfhir/index.ts         # Microsoft FHIR Server via testcontainers
 │
 ├── interfaces/                 # pure FHIR-shaped contracts — no implementation code
-│   ├── server.ts               # Server, ServerInstance
+│   ├── server.ts               # Server, ServerSpec, ServerConnection
 │   └── rest.ts                 # Rest
 │
 ├── framework/                  # plumbing
 │   ├── impl-loader.ts          # loadImpl(): returns the `impl` map from the file given to -impl
+│   ├── global-setup.ts         # jest globalSetup → Server.prepare() (provision once per run)
+│   ├── global-teardown.ts      # jest globalTeardown → Server.teardown()
 │   ├── log.ts                  # createLogger(name), since(t0) — shared logging helpers for impls
 │   └── reporter.cjs            # custom jest reporter; writes JSON report to FHIR262_OUT_PATH
 │
@@ -58,22 +60,22 @@ fhir262/
 
 ## Test shape
 
-A test loads the server, manages its lifecycle, and uses `instance.rest`:
+A test opens a connection to the already-prepared server in `beforeAll` and uses `connection.rest`:
 
 ```ts
 import { describe, it, expect, beforeAll, afterAll } from "@jest/globals";
-import type { ServerInstance } from "../../../interfaces/server";
+import type { ServerConnection } from "../../../interfaces/server";
 import { loadImpl } from "../../../framework/impl-loader";
 
 const server = loadImpl().server;
-let instance: ServerInstance;
+let connection: ServerConnection;
 
-beforeAll(async () => { instance = await server.startWithCoreOnly("r4"); });
-afterAll(async () => { await instance.stop(); });
+beforeAll(async () => { connection = await server.connect({ fhirVersion: "r4" }); });
+afterAll(async () => { await connection.close(); });
 
 describe("validate-patient", () => {
   it("validates a minimal Patient with no errors", async () => {
-    const res = await instance.rest.operation("Patient", "$validate", {
+    const res = await connection.rest.operation("Patient", "$validate", {
       resourceType: "Patient", id: "example",
     });
     expect(res.status).toBe(200);
@@ -86,8 +88,10 @@ describe("validate-patient", () => {
 
 `loadImpl()` reads `FHIR262_IMPL_PATH` from env (set by `bin/run.ts` from
 the `-impl` flag), `require`s that file, and returns its `impl` export —
-a typed map of interfaces (`{ server, ... }`). The `Server` interface is
-the entry point for tests; `rest` comes from the started `ServerInstance`.
+a typed map of interfaces (`{ server, ... }`). The server is provisioned
+once per run in jest's globalSetup (`Server.prepare`); each test file's
+`beforeAll` only opens a cheap client via `Server.connect`, and `rest` comes
+from the returned `ServerConnection`.
 
 FHIR's `OperationOutcome.issue` cardinality is `1..*` — a successful validate
 returns at least one informational issue. Assertions should check for the
@@ -97,7 +101,7 @@ absence of `error`/`fatal` severities, not for an empty `issue` array.
 
 - Each impl is a single TS file exporting `impl` (a map of interfaces). Layout is free — `-impl` points at the file directly. The impl name shown in reports is the parent directory name when the file is `index.ts`, otherwise the filename minus extension.
 - TS interface names: no `I` prefix.
-- Each test file boots a fresh server environment in `beforeAll`. That's ~20s per file for real impls (e.g. Aidbox), so related assertions for the same feature go in one file as additional `it()` blocks rather than in sibling files.
+- The server is provisioned once per run in globalSetup; `beforeAll` just opens a cheap connection via `connect()`. Because every file shares that one server, **each test must clean up the resources it creates**; the suite runs serially (`maxWorkers: 1`), so leftover data would otherwise pollute later files. Keep related assertions for the same feature in one file as additional `it()` blocks so they share setup and a single connection.
 - Impls log lifecycle and request activity through `framework/log.ts` (`createLogger("<impl-name>")`); output goes to stderr so it appears live during a run.
 
 ## House rules

@@ -1,23 +1,23 @@
 import { describe, it, expect, beforeAll, afterAll } from "@jest/globals";
-import type { ServerInstance } from "../../interfaces/server";
+import type { ServerConnection } from "../../interfaces/server";
 import { loadImpl } from "../../framework/impl-loader";
 
 const server = loadImpl().server;
-let instance: ServerInstance;
+let connection: ServerConnection;
 
 beforeAll(async () => {
-  instance = await server.startWithCoreOnly("r4");
+  connection = await server.connect({ fhirVersion: "r4" });
 });
 
 afterAll(async () => {
-  await instance.stop();
+  await connection.close();
 });
 
 describe("Patient CRUD", () => {
   let id: string;
 
   it("create returns 201 and assigns an id", async () => {
-    const res = await instance.rest.create("Patient", {
+    const res = await connection.rest.create("Patient", {
       resourceType: "Patient",
       gender: "male",
     });
@@ -29,7 +29,7 @@ describe("Patient CRUD", () => {
   });
 
   it("read returns the created resource", async () => {
-    const res = await instance.rest.read("Patient", id);
+    const res = await connection.rest.read("Patient", id);
     expect(res.status).toBe(200);
     const body = res.body as { resourceType: string; id: string; gender?: string };
     expect(body.resourceType).toBe("Patient");
@@ -38,7 +38,7 @@ describe("Patient CRUD", () => {
   });
 
   it("update changes the resource", async () => {
-    const res = await instance.rest.update("Patient", id, {
+    const res = await connection.rest.update("Patient", id, {
       resourceType: "Patient",
       id,
       gender: "female",
@@ -50,19 +50,19 @@ describe("Patient CRUD", () => {
   });
 
   it("read after update reflects the change", async () => {
-    const res = await instance.rest.read("Patient", id);
+    const res = await connection.rest.read("Patient", id);
     expect(res.status).toBe(200);
     const body = res.body as { gender?: string };
     expect(body.gender).toBe("female");
   });
 
   it("delete removes the resource", async () => {
-    const res = await instance.rest.delete("Patient", id);
+    const res = await connection.rest.delete("Patient", id);
     expect([200, 202, 204]).toContain(res.status);
   });
 
   it("read after delete returns 404 or 410", async () => {
-    const res = await instance.rest.read("Patient", id);
+    const res = await connection.rest.read("Patient", id);
     expect([404, 410]).toContain(res.status);
   });
 });
@@ -71,7 +71,7 @@ describe("Patient CRUD", () => {
 describe("create with id in body", () => {
   it("server ignores client-supplied id and assigns its own", async () => {
     const clientId = "client-supplied-id-fhir262";
-    const res = await instance.rest.create("Patient", {
+    const res = await connection.rest.create("Patient", {
       resourceType: "Patient",
       id: clientId,
       gender: "male",
@@ -88,7 +88,7 @@ describe("create with id in body", () => {
 // the server SHALL return 400 Bad Request.
 describe("update with id mismatch between url and body", () => {
   it("returns 400", async () => {
-    const res = await instance.rest.update("Patient", "fhir262-url-id", {
+    const res = await connection.rest.update("Patient", "fhir262-url-id", {
       resourceType: "Patient",
       id: "fhir262-body-id",
       gender: "male",

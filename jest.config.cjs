@@ -4,15 +4,13 @@ module.exports = {
   testMatch: ["<rootDir>/tests/**/*.ts"],
   reporters: ["default", "<rootDir>/framework/reporter.cjs"],
   setupFilesAfterEnv: ["<rootDir>/framework/matchers.ts"],
+  globalSetup: "<rootDir>/framework/global-setup.ts",
+  globalTeardown: "<rootDir>/framework/global-teardown.ts",
   rootDir: ".",
-  // beforeAll boots a per-file server environment; slow impls (e.g. medplum
-  // with 3 containers + oauth) can exceed jest's default and the previous
-  // 180s cap. 10 min gives plenty of headroom.
+  // Generous headroom for slow requests; server startup happens in globalSetup.
   testTimeout: 600000,
   slowTestThreshold: 120,
   testLocationInResults: true,
-  // Each test file boots its own server environment, so running files in
-  // parallel against a single impl would spin up duplicate stacks (wasteful
-  // and racy on shared host ports). Run files serially within one impl.
+  // Serial: all files share one server and clean up after themselves.
   maxWorkers: 1,
 };

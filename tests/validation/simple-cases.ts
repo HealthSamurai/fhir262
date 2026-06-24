@@ -1,21 +1,21 @@
 import { describe, it, expect, beforeAll, afterAll } from "@jest/globals";
-import type { ServerInstance } from "../../interfaces/server";
+import type { ServerConnection } from "../../interfaces/server";
 import { loadImpl } from "../../framework/impl-loader";
 
 const server = loadImpl().server;
-let instance: ServerInstance;
+let connection: ServerConnection;
 
 beforeAll(async () => {
-  instance = await server.startWithCoreOnly("r4");
+  connection = await server.connect({ fhirVersion: "r4" });
 });
 
 afterAll(async () => {
-  await instance.stop();
+  await connection.close();
 });
 
 describe("minimal resource (Patient)", () => {
   it("is valid", async () => {
-    const res = await instance.rest.operation("Patient", "$validate", {
+    const res = await connection.rest.operation("Patient", "$validate", {
       resourceType: "Patient",
       id: "example",
     });
@@ -26,7 +26,7 @@ describe("minimal resource (Patient)", () => {
 describe("primitive value at a complex element (Patient.name)", () => {
   let res: { status: number; body: unknown };
   beforeAll(async () => {
-    res = await instance.rest.operation("Patient", "$validate", {
+    res = await connection.rest.operation("Patient", "$validate", {
       resourceType: "Patient",
       name: "John",
     });
@@ -41,7 +41,7 @@ describe("primitive value at a complex element (Patient.name)", () => {
 
 describe("valid code at a bound element (Patient.gender)", () => {
   it("is valid", async () => {
-    const res = await instance.rest.operation("Patient", "$validate", {
+    const res = await connection.rest.operation("Patient", "$validate", {
       resourceType: "Patient",
       gender: "male",
     });
@@ -52,7 +52,7 @@ describe("valid code at a bound element (Patient.gender)", () => {
 describe("invalid code at a bound element (Patient.gender)", () => {
   let res: { status: number; body: unknown };
   beforeAll(async () => {
-    res = await instance.rest.operation("Patient", "$validate", {
+    res = await connection.rest.operation("Patient", "$validate", {
       resourceType: "Patient",
       gender: "mmale",
     });

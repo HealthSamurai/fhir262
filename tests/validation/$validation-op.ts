@@ -1,16 +1,16 @@
 import { describe, it, expect, beforeAll, afterAll } from "@jest/globals";
-import type { ServerInstance } from "../../interfaces/server";
+import type { ServerConnection } from "../../interfaces/server";
 import { loadImpl } from "../../framework/impl-loader";
 
 const server = loadImpl().server;
-let instance: ServerInstance;
+let connection: ServerConnection;
 
 beforeAll(async () => {
-  instance = await server.startWithCoreOnly("r4");
+  connection = await server.connect({ fhirVersion: "r4" });
 });
 
 afterAll(async () => {
-  await instance.stop();
+  await connection.close();
 });
 
 const validPatient = { resourceType: "Patient", id: "example" };
@@ -24,7 +24,7 @@ const parametersWrapping = (resource: unknown) => ({
 
 describe("type-level URL /Patient/$validate, Parameters-wrapped body", () => {
   it("accepts a valid Patient wrapped in Parameters", async () => {
-    const res = await instance.rest.operation(
+    const res = await connection.rest.operation(
       "Patient",
       "$validate",
       parametersWrapping(validPatient),
@@ -35,7 +35,7 @@ describe("type-level URL /Patient/$validate, Parameters-wrapped body", () => {
   describe("invalid Patient wrapped in Parameters", () => {
     let res: { status: number; body: unknown };
     beforeAll(async () => {
-      res = await instance.rest.operation(
+      res = await connection.rest.operation(
         "Patient",
         "$validate",
         parametersWrapping(invalidPatient),
@@ -52,7 +52,7 @@ describe("type-level URL /Patient/$validate, Parameters-wrapped body", () => {
 
 describe("system-level URL /$validate, Parameters-wrapped body", () => {
   it("accepts a valid Patient wrapped in Parameters", async () => {
-    const res = await instance.rest.systemOperation(
+    const res = await connection.rest.systemOperation(
       "$validate",
       parametersWrapping(validPatient),
     );
@@ -62,7 +62,7 @@ describe("system-level URL /$validate, Parameters-wrapped body", () => {
   describe("invalid Patient wrapped in Parameters", () => {
     let res: { status: number; body: unknown };
     beforeAll(async () => {
-      res = await instance.rest.systemOperation(
+      res = await connection.rest.systemOperation(
         "$validate",
         parametersWrapping(invalidPatient),
       );
@@ -78,14 +78,14 @@ describe("system-level URL /$validate, Parameters-wrapped body", () => {
 
 describe("type-level URL /Patient/$validate, resource posted directly (no Parameters wrapper)", () => {
   it("accepts a valid Patient body", async () => {
-    const res = await instance.rest.operation("Patient", "$validate", validPatient);
+    const res = await connection.rest.operation("Patient", "$validate", validPatient);
     expect(res).toBeValid();
   });
 });
 
 describe("Parameters.resource cardinality (0..1, required unless mode=delete or instance-level)", () => {
   it("rejects a Parameters body with no resource parameter", async () => {
-    const res = await instance.rest.operation("Patient", "$validate", {
+    const res = await connection.rest.operation("Patient", "$validate", {
       resourceType: "Parameters",
       parameter: [],
     });
