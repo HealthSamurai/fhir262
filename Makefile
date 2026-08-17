@@ -44,6 +44,7 @@ test-all-tmux:
 	@tmux split-window -t $(TMUX_SESSION) "FILTER='$(FILTER)' NAME='$(NAME)' $(MAKE) test-medplum; exec $$SHELL"
 	@tmux split-window -t $(TMUX_SESSION) "FILTER='$(FILTER)' NAME='$(NAME)' $(MAKE) test-msfhir; exec $$SHELL"
 	@tmux split-window -t $(TMUX_SESSION) "FILTER='$(FILTER)' NAME='$(NAME)' $(MAKE) test-fhir-candle; exec $$SHELL"
+	@tmux split-window -t $(TMUX_SESSION) "FILTER='$(FILTER)' NAME='$(NAME)' $(MAKE) test-wso2-fhir-server; exec $$SHELL"
 	@tmux select-layout -t $(TMUX_SESSION) tiled
 	@tmux attach -t $(TMUX_SESSION)
 
@@ -66,6 +67,10 @@ test-msfhir:
 test-fhir-candle:
 	@mkdir -p $(RESULTS)
 	bun bin/run.ts -impl impl/fhir-candle/index.ts -out $(RESULTS)/fhir-candle.json
+
+test-wso2-fhir-server:
+	@mkdir -p $(RESULTS)
+	bun bin/run.ts -impl impl/wso2-fhir-server/index.ts -out $(RESULTS)/wso2-fhir-server.json
 
 ui-dist:
 	bun bin/build.ts -results $(RESULTS) -dist $(DIST)
