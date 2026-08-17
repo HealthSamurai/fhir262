@@ -7,6 +7,7 @@ const PG_USER = "fhir"
 const PG_DB = "fhirdb"
 const PG_PWD = "fhir"
 const PG_PORT = 5433
+const PG_NETWORK_ALIAS = "postgres"
 
 export async function bootStack(version: string): Promise<Stack> {
   const t0 = Date.now();
@@ -14,11 +15,11 @@ export async function bootStack(version: string): Promise<Stack> {
 
   const network = await new Network().start();
 
-  log("starting postgres + wso2-fhir-server in parallel");
+  log("starting postgres");
   const tPg = Date.now();
-  const postgresPromise = new GenericContainer("docker.io/library/postgres:18")
+  const postgresDb = await new GenericContainer("docker.io/library/postgres:18")
     .withNetwork(network)
-    .withNetworkAliases("postgres")
+    .withNetworkAliases(PG_NETWORK_ALIAS)
     .withEnvironment({
       POSTGRES_USER: PG_USER,
       POSTGRES_DB: PG_DB,
@@ -49,27 +50,26 @@ export async function bootStack(version: string): Promise<Stack> {
       return c;
     });
 
+  log("starting wso2-fhir-server");
   const tAb = Date.now();
-  const wso2FhirServerPromise = new GenericContainer("ghcr.io/wso2/fhir-server:latest")
+  const wso2FhirServer = await new GenericContainer("ghcr.io/wso2/fhir-server:latest")
     .withNetwork(network)
     .withExposedPorts(WSO2_FHIR_SERVER_PORT)
     .withEnvironment({
       SERVER_PORT: String(WSO2_FHIR_SERVER_PORT),
       BASE_URL: "http://localhost:9090/fhir/r4",
       FHIR_CREATE_TABLES: "true",
-      DATABASE_URL: `postgres://${PG_USER}:${PG_PWD}@db:${PG_PORT}/${PG_DB}?sslmode=disable&pool_max_conns=20`,
+      DATABASE_URL: `postgres://${PG_USER}:${PG_PWD}@${PG_NETWORK_ALIAS}:${PG_PORT}/${PG_DB}?sslmode=disable&pool_max_conns=20`,
       LOG_LEVEL: "info",
       IG_CACHE_DIR: "/data/fhir-ig-cache",
     })
     .withWaitStrategy(Wait.forHttp("/health/ready", WSO2_FHIR_SERVER_PORT).withStartupTimeout(120_000))
-    .withStartupTimeout(150_000)
+    .withStartupTimeout(300_000)
     .start()
     .then((c) => {
       log(`wso2-fhir-server ready in ${since(tAb)}`);
       return c;
     });
-
-  const [postgresDb, wso2FhirServer] = await Promise.all([postgresPromise, wso2FhirServerPromise]);
 
   const baseUrl = `http://${wso2FhirServer.getHost()}:${wso2FhirServer.getMappedPort(WSO2_FHIR_SERVER_PORT)}`;
   log(`environment ready at ${baseUrl} in ${since(t0)}`);
