@@ -50,7 +50,7 @@ export async function bootStack(version: string): Promise<Stack> {
     });
 
   const tAb = Date.now();
-  const wso2FhirServerPromise = new GenericContainer("docker pull ghcr.io/wso2/fhir-server:latest")
+  const wso2FhirServerPromise = new GenericContainer("ghcr.io/wso2/fhir-server:latest")
     .withNetwork(network)
     .withExposedPorts(WSO2_FHIR_SERVER_PORT)
     .withEnvironment({
