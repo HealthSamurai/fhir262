@@ -30,10 +30,12 @@ make test-aidbox                                              # Aidbox (needs Do
 make test-hapi                                                # HAPI FHIR (needs Docker)
 make test-medplum                                             # Medplum (needs Docker)
 make test-msfhir                                              # Microsoft FHIR Server (needs Docker)
+make test-wso2-fhir-server                                    # WSO2 FHIR Server (needs Docker)
 bun bin/run.ts -impl impl/aidbox/index.ts -out report.json    # write a JSON report
 ```
 
 Aidbox needs `AIDBOX_LICENSE` in `.env` (see `.env.example`).
+WSO2 FHIR Server: <https://github.com/wso2/fhir-server>
 
 ## Conformance matrix UI
 
